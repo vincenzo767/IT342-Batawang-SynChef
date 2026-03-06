@@ -8,12 +8,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.3.0</version>
         <relativePath/>
     </parent>
     
-    <groupId>com.synchef</groupId>
-    <artifactId>synchef-backend</artifactId>
+    <groupId>edu.cit.batawang</groupId>
+    <artifactId>synchef</artifactId>
     <version>1.0.0</version>
     <name>SynChef Backend</name>
     <description>AI-powered real-time cooking assistant backend</description>
