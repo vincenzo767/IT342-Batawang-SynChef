@@ -1,18 +1,267 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable react/no-unknown-property */
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Stars, useTexture } from '@react-three/drei';
+import * as THREE from 'three';
 import { countryApi, recipeApi } from '../api';
 import { Country, Recipe } from '../types';
 import './FlavorMapPage.css';
 
-// Continent colors for the flat map
+// Continent colors used by globe hotspots and selected map panel.
 const continentColors: Record<string, string> = {
   'Asia': '#ec4899',
   'Europe': '#f59e0b',
   'Africa': '#06b6d4',
   'North America': '#14b8a6',
   'South America': '#8b5cf6',
-  'Oceania': '#06b6d4',
+  'Oceania': '#22c55e',
+};
+
+const continentOrder = ['Asia', 'Europe', 'Africa', 'North America', 'South America', 'Oceania'];
+const defaultContinent = continentOrder[0];
+
+const continentHotspots: Record<string, { latitude: number; longitude: number; markerRadius: number; hitRadius: number }> = {
+  'Asia': { latitude: 33, longitude: 95, markerRadius: 0.03, hitRadius: 0.09 },
+  'Europe': { latitude: 51, longitude: 15, markerRadius: 0.028, hitRadius: 0.085 },
+  'Africa': { latitude: 6, longitude: 20, markerRadius: 0.03, hitRadius: 0.09 },
+  'North America': { latitude: 46, longitude: -102, markerRadius: 0.03, hitRadius: 0.09 },
+  'South America': { latitude: -18, longitude: -60, markerRadius: 0.029, hitRadius: 0.088 },
+  'Oceania': { latitude: -23, longitude: 134, markerRadius: 0.028, hitRadius: 0.085 },
+};
+
+const continentShapes: Record<string, string> = {
+  'Asia': 'M18,70 L36,42 L70,35 L112,18 L148,26 L178,46 L188,64 L170,88 L136,98 L92,94 L56,102 L24,90 Z',
+  'Europe': 'M24,70 L46,44 L82,36 L118,40 L148,56 L136,80 L106,88 L74,84 L52,94 L30,86 Z',
+  'Africa': 'M78,16 L112,26 L136,54 L132,88 L104,112 L72,96 L60,66 L68,36 Z',
+  'North America': 'M16,72 L42,38 L86,20 L130,26 L160,46 L148,72 L124,88 L96,82 L76,94 L42,96 Z',
+  'South America': 'M98,14 L126,30 L138,58 L126,86 L108,114 L88,104 L76,74 L80,42 Z',
+  'Oceania': 'M26,70 L52,56 L86,60 L114,76 L98,94 L64,96 L42,88 Z',
+};
+
+const normalizeContinentName = (name: string) => name.replace(/_/g, ' ');
+
+const getContinentColor = (name: string) => {
+  const normalizedName = normalizeContinentName(name);
+  return continentColors[normalizedName] || '#667eea';
+};
+
+const toSpherePosition = (latitude: number, longitude: number, radius: number) => {
+  // Convert lat/long to Three.js coordinates on a sphere surface.
+  const phi = (90 - latitude) * (Math.PI / 180);
+  const theta = (longitude + 180) * (Math.PI / 180);
+  const x = -radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.cos(phi);
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  return new THREE.Vector3(x, y, z);
+};
+
+type ContinentHotspotProps = {
+  continent: string;
+  selectedContinent: string | null;
+  onSelect: (continent: string) => void;
+};
+
+const ContinentHotspot = ({ continent, selectedContinent, onSelect }: ContinentHotspotProps) => {
+  const normalizedName = normalizeContinentName(continent);
+  const hotspot = continentHotspots[normalizedName];
+  const color = getContinentColor(continent);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const pulseRef = useRef<THREE.Mesh>(null);
+  const isSelected = selectedContinent === continent;
+
+  const surfacePosition = useMemo(
+    () => toSpherePosition(hotspot.latitude, hotspot.longitude, 1.012),
+    [hotspot.latitude, hotspot.longitude],
+  );
+  const normal = useMemo(() => surfacePosition.clone().normalize(), [surfacePosition]);
+  const orientation = useMemo(
+    () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal),
+    [normal],
+  );
+
+  useFrame(({ clock }) => {
+    const pulseWave = (Math.sin(clock.elapsedTime * 4.2) + 1) / 2;
+    const pulseScale = 1 + pulseWave * 0.18;
+    if (pulseRef.current) {
+      pulseRef.current.scale.setScalar(isSelected ? 1.45 + pulseWave * 0.2 : pulseScale);
+    }
+    if (meshRef.current) {
+      const selectedScale = 1.18 + pulseWave * 0.1;
+      meshRef.current.scale.setScalar(isSelected ? selectedScale : 1);
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={pulseRef} position={surfacePosition} quaternion={orientation}>
+        <ringGeometry args={[hotspot.markerRadius * 1.35, hotspot.markerRadius * 1.9, 40]} />
+        <meshBasicMaterial color={color} transparent opacity={isSelected ? 1 : 0.42} side={THREE.DoubleSide} />
+      </mesh>
+
+      <mesh
+        ref={meshRef}
+        position={surfacePosition}
+        quaternion={orientation}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(continent);
+        }}
+      >
+        <circleGeometry args={[hotspot.markerRadius, 36]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 1.05 : 0.22} transparent opacity={0.98} side={THREE.DoubleSide} />
+      </mesh>
+
+      <mesh
+        position={surfacePosition}
+        quaternion={orientation}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(continent);
+        }}
+      >
+        <circleGeometry args={[hotspot.hitRadius, 28]} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+};
+
+type GlobeSceneProps = {
+  continents: string[];
+  selectedContinent: string | null;
+  onSelect: (continent: string) => void;
+};
+
+const GlobeScene = ({ continents, selectedContinent, onSelect }: GlobeSceneProps) => {
+  const globeRef = useRef<THREE.Group>(null);
+  const cloudRef = useRef<THREE.Mesh>(null);
+  const [earthMap, earthNormalMap, earthSpecularMap, cloudMap] = useTexture([
+    'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
+    'https://threejs.org/examples/textures/planets/earth_normal_2048.jpg',
+    'https://threejs.org/examples/textures/planets/earth_specular_2048.jpg',
+    'https://threejs.org/examples/textures/planets/earth_clouds_1024.png',
+  ]);
+
+  earthMap.colorSpace = THREE.SRGBColorSpace;
+  earthSpecularMap.colorSpace = THREE.SRGBColorSpace;
+  cloudMap.colorSpace = THREE.SRGBColorSpace;
+
+  useFrame((_, delta) => {
+    if (globeRef.current) {
+      // Rotate Earth and continent markers together so markers stay locked to continents.
+      globeRef.current.rotation.y += delta / 16;
+    }
+    if (cloudRef.current) {
+      // Slightly faster cloud movement relative to Earth spin.
+      cloudRef.current.rotation.y += delta / 10;
+    }
+  });
+
+  return (
+    <>
+      <color attach="background" args={['#04142e']} />
+      <ambientLight intensity={0.92} />
+      <hemisphereLight args={['#e2f3ff', '#1e3a8a', 0.56]} />
+      <directionalLight position={[3.6, 2.4, 3.2]} intensity={1.38} color="#ffffff" />
+      <pointLight position={[-2.6, -1.1, -3.4]} intensity={0.28} color="#38bdf8" />
+
+      <Stars radius={80} depth={35} count={2500} factor={3} saturation={0} fade speed={0.3} />
+
+      <group ref={globeRef}>
+        <mesh>
+          <sphereGeometry args={[1, 64, 64]} />
+          <meshPhongMaterial
+            map={earthMap}
+            normalMap={earthNormalMap}
+            specularMap={earthSpecularMap}
+            specular="#dbeafe"
+            shininess={22}
+            emissive="#102743"
+            emissiveIntensity={0.15}
+          />
+        </mesh>
+
+        <mesh ref={cloudRef}>
+          <sphereGeometry args={[1.018, 64, 64]} />
+          <meshPhongMaterial map={cloudMap} transparent opacity={0.25} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+
+        {continents.map((continent) => {
+          const normalizedName = normalizeContinentName(continent);
+          if (!continentHotspots[normalizedName]) {
+            return null;
+          }
+
+          return (
+            <ContinentHotspot
+              key={continent}
+              continent={continent}
+              selectedContinent={selectedContinent}
+              onSelect={onSelect}
+            />
+          );
+        })}
+      </group>
+
+      <OrbitControls
+        enablePan={false}
+        minDistance={2}
+        maxDistance={3.6}
+        autoRotate={false}
+      />
+    </>
+  );
+};
+
+const ContinentShape = ({ selectedContinent }: { selectedContinent: string }) => {
+  const normalizedName = normalizeContinentName(selectedContinent);
+  const color = getContinentColor(selectedContinent);
+  const shapePath = continentShapes[normalizedName] || continentShapes['Europe'];
+
+  return (
+    <div className="continent-shape-card">
+      <svg viewBox="0 0 220 130" className="continent-shape-svg" aria-label={`${normalizedName} map`}>
+        <title>{`${normalizedName} map`}</title>
+        <defs>
+          <linearGradient id="continentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.85" />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="220" height="130" rx="14" fill="#020617" />
+        <path d={shapePath} fill="url(#continentGradient)" stroke={color} strokeWidth="2" />
+      </svg>
+      <p className="continent-shape-caption">{normalizedName}</p>
+    </div>
+  );
+};
+
+const mergeCountries = (primary: Country[], fallback: Country[]) => {
+  const deduped = new Map<string, Country>();
+
+  [...fallback, ...primary].forEach((country) => {
+    deduped.set(country.code, country);
+  });
+
+  return Array.from(deduped.values());
+};
+
+const buildContinentsData = (fetchedData: Record<string, Country[]>) => {
+  const baseData: Record<string, Country[]> = {};
+
+  continentOrder.forEach((continent) => {
+    baseData[continent] = [...(mockContinents[continent] || [])];
+  });
+
+  Object.entries(fetchedData).forEach(([continentKey, fetchedCountries]) => {
+    const normalizedContinent = normalizeContinentName(continentKey);
+    const fallbackCountries = baseData[normalizedContinent] || [];
+    baseData[normalizedContinent] = mergeCountries(fetchedCountries || [], fallbackCountries);
+  });
+
+  return baseData;
 };
 
 // Mock data for when backend is not available
@@ -70,15 +319,19 @@ const FlavorMapPage = () => {
   const loadCountries = async () => {
     try {
       const response = await countryApi.getGroupedByContinent();
-      setContinents(response.data);
-      const allCountries = Object.values(response.data).flat();
+      const mergedContinents = buildContinentsData(response.data || {});
+      setContinents(mergedContinents);
+      const allCountries = Object.values(mergedContinents).flat();
       setCountries(allCountries);
+      setSelectedContinent((current) => current || defaultContinent);
     } catch (error) {
       console.error('Failed to load countries, using mock data:', error);
       // Use mock data when backend is not available
-      setContinents(mockContinents);
-      const allCountries = Object.values(mockContinents).flat();
+      const fallbackContinents = buildContinentsData({});
+      setContinents(fallbackContinents);
+      const allCountries = Object.values(fallbackContinents).flat();
       setCountries(allCountries);
+      setSelectedContinent((current) => current || defaultContinent);
     } finally {
       setLoading(false);
     }
@@ -141,7 +394,7 @@ const FlavorMapPage = () => {
     navigate(`/recipe/${recipeId}`);
   };
 
-  const availableContinents = Object.keys(continents).sort();
+  const availableContinents = continentOrder.filter((continent) => continents[continent]);
   const displayedCountries = selectedContinent
     ? continents[selectedContinent] || []
     : countries;
@@ -158,43 +411,73 @@ const FlavorMapPage = () => {
         </motion.h1>
 
         <div className="flavor-map-layout">
-          {/* Flat Map Section */}
+          {/* 3D Globe Section */}
           <div className="globe-section">
-            <div className="flat-map">
+            <div className="globe-card">
               <div className="map-header">
-                <h2>World Cuisines</h2>
-                <p>Click continents below to explore</p>
+                <h2>3D Flavor Globe</h2>
+                <p>Rotate and click a continent hotspot to explore countries and cuisines</p>
               </div>
-              
-              <div className="continents-visual">
+
+              <div className="globe-canvas-wrapper">
+                <Canvas camera={{ position: [0, 0.2, 2.65], fov: 45 }}>
+                  <GlobeScene
+                    continents={availableContinents}
+                    selectedContinent={selectedContinent}
+                    onSelect={handleContinentClick}
+                  />
+                </Canvas>
+              </div>
+
+              <div className="continent-picker" aria-label="Choose continent">
                 {availableContinents.map((continent) => {
-                  const countryCount = continents[continent]?.length || 0;
                   const isSelected = selectedContinent === continent;
-                  const color = continentColors[continent] || '#667eea';
-                  
+                  const countryCount = (continents[continent] || []).length;
+
                   return (
-                    <motion.button
+                    <button
                       key={continent}
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`continent-visual ${isSelected ? 'active' : ''}`}
-                      style={{
-                        backgroundColor: isSelected ? color : 'rgba(255, 255, 255, 0.05)',
-                        borderColor: color,
-                      }}
+                      className={`continent-picker-btn ${isSelected ? 'active' : ''}`}
+                      style={{ borderColor: getContinentColor(continent) }}
                       onClick={() => handleContinentClick(continent)}
                     >
-                      <span className="continent-label">{continent.replace(/_/g, ' ')}</span>
-                      <span className="continent-count">{countryCount} 🍽️</span>
-                    </motion.button>
+                      <span
+                        className="continent-picker-dot"
+                        style={{ backgroundColor: getContinentColor(continent) }}
+                      />
+                      <span className="continent-picker-name">{continent}</span>
+                      <span className="continent-picker-count">{countryCount}</span>
+                    </button>
                   );
                 })}
               </div>
 
               <div className="map-footer">
                 <p>📍 Total Countries: {countries.length}</p>
-                <p>🍽️ Click continent buttons above to start exploring</p>
+                <p>🍽️ Click any continent label around the globe to start exploring</p>
               </div>
+            </div>
+
+            <div className="continent-selected-panel">
+              <h3>Continent Selected</h3>
+              {selectedContinent ? (
+                <>
+                  <ContinentShape selectedContinent={selectedContinent} />
+                  <div className="continent-meta">
+                    <span
+                      className="continent-chip"
+                      style={{ backgroundColor: getContinentColor(selectedContinent) }}
+                    >
+                      {normalizeContinentName(selectedContinent)}
+                    </span>
+                    <span className="continent-country-count">
+                      {(continents[selectedContinent] || []).length} countries available
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="continent-empty">Select a continent on the globe to preview it here.</p>
+              )}
             </div>
           </div>
 
@@ -207,7 +490,7 @@ const FlavorMapPage = () => {
             {displayedCountries.length > 0 && (
               <div className="countries-section">
                 <h3>
-                  {selectedContinent ? `Countries in ${selectedContinent.replace(/_/g, ' ')}` : 'All Countries'}
+                  {selectedContinent ? `Countries in ${normalizeContinentName(selectedContinent)}` : 'All Countries'}
                   <span className="count-badge">{displayedCountries.length}</span>
                 </h3>
                 <div className="countries-grid">

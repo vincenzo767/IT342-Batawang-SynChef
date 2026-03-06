@@ -1,6 +1,9 @@
 .flavor-map-page {
   padding: 40px 20px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(14, 165, 233, 0.18), transparent 34%),
+    radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.12), transparent 36%),
+    linear-gradient(150deg, rgba(15, 23, 42, 0.06), rgba(148, 163, 184, 0.12));
   min-height: calc(100vh - 80px);
 }
 
@@ -25,28 +28,29 @@
   gap: 20px;
 }
 
-.flat-map {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.globe-card {
+  background: linear-gradient(155deg, #0b1d3a 0%, #102f55 60%, #1e3a8a 100%);
   border-radius: 16px;
-  padding: 40px;
+  padding: 32px;
   color: white;
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 500px;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
+  min-height: 560px;
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .map-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .map-header h2 {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
   margin: 0 0 8px 0;
+  letter-spacing: 0.2px;
 }
 
 .map-header p {
@@ -55,60 +59,86 @@
   margin: 0;
 }
 
-.continents-visual {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  flex: 1;
-  margin-bottom: 40px;
+.globe-canvas-wrapper {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  min-height: 380px;
+  background: radial-gradient(circle at 45% 40%, rgba(59, 130, 246, 0.12), rgba(2, 6, 23, 0.95));
+  margin-bottom: 20px;
 }
 
-.continent-visual {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.globe-canvas-wrapper canvas {
+  width: 100% !important;
+  height: 380px !important;
+  display: block;
+}
+
+.continent-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.continent-picker-btn {
+  border: 1px solid rgba(148, 163, 184, 0.65);
+  background: rgba(30, 41, 59, 0.86);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 10px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.continent-picker-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(51, 65, 85, 0.94);
+  box-shadow: 0 6px 12px rgba(2, 6, 23, 0.25);
+}
+
+.continent-picker-btn.active {
+  background: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 1px rgba(219, 234, 254, 0.72) inset;
+}
+
+.continent-picker-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.continent-picker-name {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  flex: 1;
+}
+
+.continent-picker-count {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.28);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: capitalize;
-  min-height: 100px;
 }
 
-.continent-visual:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.continent-visual.active {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-.continent-label {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.continent-count {
-  font-size: 18px;
-  font-weight: 700;
-  opacity: 0.9;
-}
 
 .map-footer {
   text-align: center;
-  padding-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 13px;
   opacity: 0.85;
@@ -116,6 +146,73 @@
 
 .map-footer p {
   margin: 4px 0;
+}
+
+.continent-selected-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+}
+
+.continent-selected-panel h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.continent-shape-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #020617;
+}
+
+.continent-shape-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.continent-shape-caption {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-align: center;
+  background: linear-gradient(120deg, #0f172a, #1e293b);
+}
+
+.continent-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.continent-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.continent-country-count {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.continent-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .selection-section {
@@ -379,8 +476,19 @@
     gap: 30px;
   }
 
-  .continents-visual {
-    grid-template-columns: repeat(3, 1fr);
+  .globe-canvas-wrapper,
+  .globe-canvas-wrapper canvas {
+    min-height: 340px;
+    height: 340px !important;
+  }
+
+  .continent-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .continent-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .countries-grid {
@@ -401,20 +509,39 @@
     gap: 20px;
   }
 
-  .flat-map {
+  .globe-card {
     padding: 20px;
-    min-height: 400px;
+    min-height: 470px;
   }
 
-  .continents-visual {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+  .globe-canvas-wrapper,
+  .globe-canvas-wrapper canvas {
+    min-height: 290px;
+    height: 290px !important;
   }
 
-  .continent-visual {
-    padding: 16px;
-    min-height: 80px;
-    font-size: 12px;
+  .map-header h2 {
+    font-size: 24px;
+  }
+
+  .map-header p {
+    font-size: 13px;
+  }
+
+  .continent-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .continent-picker-name {
+    font-size: 11px;
+  }
+
+  .continent-selected-panel {
+    padding: 14px;
+  }
+
+  .continent-selected-panel h3 {
+    font-size: 16px;
   }
 
   .countries-grid {
