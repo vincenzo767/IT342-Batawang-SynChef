@@ -1,0 +1,258 @@
+.register-page-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.register-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.32);
+  padding: 30px 28px;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.register-header h1 {
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.register-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.register-alert {
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+}
+
+.register-alert-error {
+  color: #991b1b;
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+}
+
+.register-alert-info {
+  color: #1e40af;
+  background: #dbeafe;
+  border-left: 4px solid #2563eb;
+}
+
+.register-form {
+  display: grid;
+  gap: 14px;
+}
+
+.register-field {
+  display: grid;
+  gap: 8px;
+}
+
+.register-field label {
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.register-field input,
+.register-field select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-field input:focus,
+.register-field select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.password-hint {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #6b7280;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-size: 0.8rem;
+}
+
+.terms-row {
+  margin-top: 2px;
+}
+
+.terms-control {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.terms-control input {
+  margin-top: 2px;
+  accent-color: #7c3aed;
+}
+
+.terms-control span {
+  color: #4b5563;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.inline-link-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #7c3aed;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inline-link-btn:hover {
+  color: #6d28d9;
+}
+
+.terms-error {
+  margin-top: -6px;
+}
+
+.register-submit-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.28);
+}
+
+.register-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.register-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signin-row {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.signin-row p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.94rem;
+}
+
+.signin-row a {
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.signin-row a:hover {
+  color: #6d28d9;
+}
+
+.social-signup-divider {
+  position: relative;
+  margin: 24px 0 14px;
+  text-align: center;
+}
+
+.social-signup-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #d1d5db;
+}
+
+.social-signup-divider span {
+  position: relative;
+  z-index: 1;
+  padding: 0 10px;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 0.84rem;
+}
+
+.social-signup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.social-btn {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 9px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.social-btn:hover {
+  background: #f9fafb;
+}
+
+.social-btn span {
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .register-page-shell {
+    padding: 18px 12px;
+  }
+
+  .register-card {
+    padding: 24px 18px;
+  }
+
+  .register-header h1 {
+    font-size: 1.7rem;
+  }
+}

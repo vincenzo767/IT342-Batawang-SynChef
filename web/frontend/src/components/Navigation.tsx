@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaHome, FaGlobeAmericas, FaUser, FaSignOutAlt, FaUtensils } from 'react-icons/fa';
+import { FaHome, FaUser, FaSignOutAlt, FaUtensils, FaCog, FaTachometerAlt } from 'react-icons/fa';
 import { RootState } from '../store';
 import { logout } from '../store/authSlice';
 import './Navigation.css';
@@ -35,13 +35,31 @@ const Navigation = () => {
               <FaHome />
               <span>Home</span>
             </Link>
-            <Link
-              to="/flavor-map"
-              className={`nav-link ${location.pathname === '/flavor-map' ? 'active' : ''}`}
-            >
-              <FaGlobeAmericas />
-              <span>Flavor Map</span>
-            </Link>
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+                >
+                  <FaTachometerAlt />
+                  <span>Dashboard</span>
+                </Link>
+                <Link
+                  to="/profile"
+                  className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
+                >
+                  <FaUser />
+                  <span>Profile</span>
+                </Link>
+                <Link
+                  to="/settings"
+                  className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}
+                >
+                  <FaCog />
+                  <span>Settings</span>
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="nav-auth">

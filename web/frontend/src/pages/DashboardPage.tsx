@@ -1,67 +1,136 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { FaBookOpen, FaUserCog, FaChartLine, FaClipboardCheck } from 'react-icons/fa';
+import {
+  FaBookmark,
+  FaCheckCircle,
+  FaClock,
+  FaGlobe
+} from 'react-icons/fa';
 import { RootState } from '../store';
-import './LearningWorkspace.css';
+import './DashboardPage.css';
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const learningTracks = [
-    { title: 'Knife Skills', progress: 'Beginner', lesson: 'Safe slicing and julienne basics' },
-    { title: 'Flavor Pairing', progress: 'Intermediate', lesson: 'Balance acidity, sweetness, and umami' },
-    { title: 'Meal Planning', progress: 'Beginner', lesson: 'Build a 3-day prep strategy' },
+  const firstName = user?.fullName?.split(' ')[0] || 'Chef';
+
+  const stats = [
+    {
+      label: 'Saved Recipes',
+      value: '24',
+      tone: 'purple',
+      icon: <FaBookmark />
+    },
+    {
+      label: 'Countries Explored',
+      value: '12',
+      tone: 'indigo',
+      icon: <FaGlobe />
+    },
+    {
+      label: 'Recipes Tried',
+      value: '38',
+      tone: 'green',
+      icon: <FaCheckCircle />
+    },
+    {
+      label: 'Cooking Time',
+      value: '42h',
+      tone: 'orange',
+      icon: <FaClock />
+    }
+  ];
+
+  const discoveredRecipes = [
+    {
+      title: 'Pad Thai',
+      subtitle: 'Thailand • Asian Cuisine',
+      time: '30 min',
+      image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=1200'
+    },
+    {
+      title: 'Paella Valenciana',
+      subtitle: 'Spain • European Cuisine',
+      time: '45 min',
+      image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=1200'
+    },
+    {
+      title: 'Butter Chicken',
+      subtitle: 'India • Asian Cuisine',
+      time: '50 min',
+      image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=1200'
+    }
+  ];
+
+  const flavorRegions = [
+    { emoji: '🌏', name: 'Asia', count: '2,847 recipes', tone: 'blue' },
+    { emoji: '🌍', name: 'Africa', count: '1,234 recipes', tone: 'yellow' },
+    { emoji: '🌎', name: 'North America', count: '3,156 recipes', tone: 'green' },
+    { emoji: '🌎', name: 'South America', count: '1,892 recipes', tone: 'orange' },
+    { emoji: '🌍', name: 'Europe', count: '4,521 recipes', tone: 'purple' },
+    { emoji: '🌏', name: 'Oceania', count: '789 recipes', tone: 'teal' }
   ];
 
   return (
-    <div className="workspace-page page">
-      <div className="container">
-        <div className="workspace-header card">
-          <h1>Learning Dashboard</h1>
-          <p>Welcome back, {user?.fullName || 'Chef'}! Continue your culinary learning journey.</p>
-        </div>
+    <div className="dashboard-page">
+      <div className="dashboard-shell container">
+        <section className="dashboard-card welcome-card">
+          <h2>
+            Welcome back, <span>{firstName}</span>!
+          </h2>
+          <p>Discover new recipes and explore culinary traditions from around the world</p>
+        </section>
 
-        <div className="workspace-grid grid grid-2">
-          <div className="card workspace-section">
-            <h2><FaBookOpen /> Active Learning Tracks</h2>
-            <ul className="workspace-list">
-              {learningTracks.map((track) => (
-                <li key={track.title}>
-                  <strong>{track.title}</strong>
-                  <span>{track.progress} • {track.lesson}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <section className="stats-grid">
+          {stats.map((item) => (
+            <article key={item.label} className="dashboard-card stat-card">
+              <div>
+                <p>{item.label}</p>
+                <h3 className={`tone-${item.tone}`}>{item.value}</h3>
+              </div>
+              <div className={`stat-icon tone-bg-${item.tone}`}>{item.icon}</div>
+            </article>
+          ))}
+        </section>
 
-          <div className="card workspace-section">
-            <h2><FaChartLine /> Weekly Goals</h2>
-            <ul className="workspace-list">
-              <li><strong>2 new recipes</strong><span>Explore one cuisine you have never cooked before</span></li>
-              <li><strong>3 practice sessions</strong><span>Complete prep, cook, and plating flow</span></li>
-              <li><strong>1 reflection note</strong><span>Document what worked and what to improve</span></li>
-            </ul>
+        <section className="dashboard-card discovered-card">
+          <h3>Recently Discovered</h3>
+          <div className="discovered-grid">
+            {discoveredRecipes.map((recipe) => (
+              <article key={recipe.title} className="discover-item">
+                <img src={recipe.image} alt={recipe.title} loading="lazy" />
+                <div className="discover-body">
+                  <h4>{recipe.title}</h4>
+                  <p>{recipe.subtitle}</p>
+                  <div>
+                    <span>⏱️ {recipe.time}</span>
+                    <button type="button" onClick={() => navigate('/')}>View Recipe →</button>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
+        </section>
 
-          <div className="card workspace-section">
-            <h2><FaClipboardCheck /> Quick Actions</h2>
-            <div className="workspace-actions">
-              <Link to="/" className="btn btn-primary">Browse Recipes</Link>
-              <Link to="/flavor-map" className="btn btn-secondary">Open Flavor Map</Link>
-              <Link to="/profile" className="btn btn-secondary">View Profile</Link>
-              <Link to="/settings" className="btn btn-secondary">Learning Settings</Link>
-            </div>
+        <section className="dashboard-card flavor-card">
+          <h3>Global Flavor Map</h3>
+          <p>Explore recipes by continent - Click on a region to discover more</p>
+          <div className="flavor-grid">
+            {flavorRegions.map((region) => (
+              <button
+                key={region.name}
+                type="button"
+                className={`flavor-tile tone-bg-${region.tone}`}
+                onClick={() => navigate('/flavor-map')}
+              >
+                <div className="emoji">{region.emoji}</div>
+                <h4>{region.name}</h4>
+                <span>{region.count}</span>
+              </button>
+            ))}
           </div>
-
-          <div className="card workspace-section">
-            <h2><FaUserCog /> Account Snapshot</h2>
-            <ul className="workspace-list">
-              <li><strong>Email</strong><span>{user?.email || 'Not available'}</span></li>
-              <li><strong>Username</strong><span>{user?.username || 'Not available'}</span></li>
-              <li><strong>Email Verified</strong><span>{user?.emailVerified ? 'Yes' : 'No'}</span></li>
-            </ul>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   );

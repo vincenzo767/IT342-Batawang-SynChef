@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaClock,
   FaGlobe,
   FaMapMarkerAlt,
   FaSearch,
-  FaTimes,
   FaUtensils
 } from 'react-icons/fa';
 import './HomePage.css';
@@ -31,25 +31,10 @@ const recipes: LocalRecipe[] = [
   { id: 9, title: 'Australian Meat Pie', region: 'Oceania', cuisine: 'Australian', time: '40 min', difficulty: 'Medium', image: 'https://images.unsplash.com/photo-1619881991144-3f7e3c285e0f?w=800' }
 ];
 
-const continents = [
-  { name: 'North America', count: '1,234' },
-  { name: 'South America', count: '876' },
-  { name: 'Europe', count: '2,156' },
-  { name: 'Africa', count: '1,543' },
-  { name: 'Asia', count: '3,421' },
-  { name: 'Oceania', count: '432' }
-];
-
 const HomePage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
-  const [flavorMapOpen, setFlavorMapOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    globalThis.setTimeout(() => setToast(null), 2800);
-  };
 
   const visibleRecipes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -67,12 +52,6 @@ const HomePage = () => {
   }, [activeRegion, searchQuery]);
 
   const hasFilters = Boolean(searchQuery.trim() || activeRegion);
-
-  const handleContinentSelect = (continent: string) => {
-    setActiveRegion(continent);
-    setFlavorMapOpen(false);
-    showToast(`Showing recipes from ${continent}`);
-  };
 
   const resetFilters = () => {
     setSearchQuery('');
@@ -103,7 +82,7 @@ const HomePage = () => {
             </div>
 
             <div className="hero-actions">
-              <button className="hero-action-primary" onClick={() => setFlavorMapOpen(true)}>
+              <button className="hero-action-primary" onClick={() => navigate('/flavor-map')}>
                 Explore the Flavor Map
               </button>
             </div>
@@ -134,7 +113,7 @@ const HomePage = () => {
               <h2>Featured Recipes</h2>
               {hasFilters && (
                 <button className="clear-filters-btn" onClick={resetFilters}>
-                  <FaTimes /> Clear Filters
+                  Clear Filters
                 </button>
               )}
             </div>
@@ -178,39 +157,6 @@ const HomePage = () => {
             <p>© 2026 SynChef AI. All rights reserved.</p>
           </div>
         </footer>
-
-        {flavorMapOpen && (
-          <dialog className="flavor-map-modal" open>
-            <div className="flavor-map-panel">
-              <div className="flavor-map-header">
-                <h2>Global Flavor Map</h2>
-                <button type="button" onClick={() => setFlavorMapOpen(false)} aria-label="Close flavor map">
-                  <FaTimes />
-                </button>
-              </div>
-              <p className="flavor-map-subtitle">Click on any continent to explore recipes from that region.</p>
-              <div className="continent-grid">
-                {continents.map((continent) => (
-                  <button
-                    type="button"
-                    key={continent.name}
-                    className="continent-card"
-                    onClick={() => handleContinentSelect(continent.name)}
-                  >
-                    <h3>{continent.name}</h3>
-                    <span>{continent.count} recipes</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </dialog>
-        )}
-
-        {toast && (
-          <output className={`home-toast ${toast.type}`} aria-live="polite">
-            {toast.message}
-          </output>
-        )}
       </div>
     </div>
   );
