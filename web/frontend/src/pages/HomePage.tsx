@@ -57,15 +57,15 @@ const HomePage = () => {
     // Filter by search term
     if (searchTerm.trim()) {
       filtered = filtered.filter(recipe =>
-        recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        recipe.description.toLowerCase().includes(searchTerm.toLowerCase())
+        recipe.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        recipe.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter(recipe =>
-        recipe.categories.some(cat => cat.name === selectedCategory)
+        recipe.categories?.some(cat => cat.name === selectedCategory)
       );
     }
 
@@ -208,7 +208,9 @@ const HomePage = () => {
                   >
                     <div className="recipe-header">
                       <h3>{recipe.name}</h3>
-                      <span className="country-flag">{recipe.country.flagEmoji}</span>
+                      {recipe.country?.flagEmoji && (
+                        <span className="country-flag">{recipe.country.flagEmoji}</span>
+                      )}
                     </div>
 
                     <p className="recipe-description">{recipe.description}</p>
@@ -216,19 +218,21 @@ const HomePage = () => {
                     <div className="recipe-meta">
                       <div className="meta-item">
                         <FaClock />
-                        <span>{recipe.totalTimeMinutes} min</span>
+                        <span>{recipe.totalTimeMinutes || 0} min</span>
                       </div>
                       <div className="meta-item">
                         <FaUsers />
-                        <span>{recipe.defaultServings} servings</span>
+                        <span>{recipe.defaultServings || 1} servings</span>
                       </div>
-                      <span className={`badge badge-${recipe.difficultyLevel.toLowerCase()}`}>
-                        {recipe.difficultyLevel}
-                      </span>
+                      {recipe.difficultyLevel && (
+                        <span className={`badge badge-${recipe.difficultyLevel.toLowerCase()}`}>
+                          {recipe.difficultyLevel}
+                        </span>
+                      )}
                     </div>
 
                     <div className="recipe-categories">
-                      {recipe.categories.slice(0, 3).map((cat) => (
+                      {recipe.categories?.slice(0, 3).map((cat) => (
                         <span key={cat.id} className="category-tag">
                           {cat.iconName} {cat.name}
                         </span>

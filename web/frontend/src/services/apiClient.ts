@@ -2,7 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { store } from '../store';
 import { logout } from '../store/authSlice';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
