@@ -1,26 +1,69 @@
 .login-page-shell {
   min-height: 100svh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: calc(68px + 18px) 16px 24px;
+  padding: calc(76px + 18px) 24px 24px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(circle at 20% 25%, rgba(122, 141, 255, 0.36), transparent 45%),
+    linear-gradient(130deg, #5f72d9 0%, #5d63d3 38%, #6d57bb 100%);
+}
+
+.auth-layout {
+  width: min(1200px, 100%);
+  display: grid;
+  grid-template-columns: 1fr minmax(360px, 430px);
+  gap: clamp(28px, 4vw, 52px);
+  align-items: center;
+}
+
+.auth-brand-panel {
+  color: #f5f7ff;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.auth-brand-logo {
+  width: clamp(120px, 18vw, 182px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 28px rgba(16, 20, 52, 0.35));
+}
+
+.auth-brand-title {
+  margin: 0;
+  font-size: clamp(2.2rem, 4.3vw, 3.35rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-brand-title span {
+  color: #ffd45a;
+}
+
+.auth-brand-subtitle {
+  margin: 0;
+  max-width: 560px;
+  color: rgba(244, 247, 255, 0.8);
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
 .login-card {
   width: 100%;
-  max-width: 440px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.32);
-  padding: 28px 24px;
+  background: #f6f8ff;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 20px 50px rgba(17, 25, 66, 0.3);
+  padding: 28px 22px;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .login-header h1 {
@@ -57,26 +100,26 @@
 
 .login-form {
   display: grid;
-  gap: 12px;
+  gap: 11px;
 }
 
 .login-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .login-field label {
   color: #374151;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
 }
 
 .login-field input {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 11px 13px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  padding: 9px 11px;
+  font-size: 0.8rem;
   color: #111827;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -106,7 +149,7 @@
 }
 
 .remember-me-control span {
-  font-size: 0.9rem;
+  font-size: 0.76rem;
   color: #4b5563;
 }
 
@@ -116,7 +159,7 @@
   padding: 0;
   color: #7c3aed;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -127,10 +170,10 @@
 .login-submit-btn {
   width: 100%;
   border: none;
-  border-radius: 10px;
-  padding: 11px 14px;
+  border-radius: 5px;
+  padding: 9px 14px;
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 700;
   background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
   cursor: pointer;
@@ -148,14 +191,14 @@
 }
 
 .signup-row {
-  margin-top: 16px;
+  margin-top: 12px;
   text-align: center;
 }
 
 .signup-row p {
   margin: 0;
   color: #4b5563;
-  font-size: 0.94rem;
+  font-size: 0.72rem;
 }
 
 .signup-row a {
@@ -170,12 +213,12 @@
 
 .social-login-divider {
   position: relative;
-  margin: 18px 0 12px;
+  margin: 14px 0 10px;
   text-align: center;
 }
 
 .social-login-divider::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 0;
@@ -188,26 +231,26 @@
   position: relative;
   z-index: 1;
   padding: 0 10px;
-  background: #ffffff;
+  background: #f6f8ff;
   color: #6b7280;
-  font-size: 0.84rem;
+  font-size: 0.7rem;
 }
 
 .social-login-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .social-btn {
   border: 1px solid #d1d5db;
   background: #ffffff;
-  border-radius: 10px;
-  padding: 9px 10px;
+  border-radius: 6px;
+  padding: 7px 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -218,19 +261,29 @@
 
 .social-btn span {
   color: #374151;
-  font-size: 0.88rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
 .social-icon {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   display: block;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 980px) {
   .login-page-shell {
-    padding: calc(68px + 14px) 12px 18px;
+    padding: calc(70px + 14px) 12px 16px;
+  }
+
+  .auth-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 520px;
+  }
+
+  .auth-brand-panel {
+    display: none;
   }
 
   .login-card {

@@ -1,5 +1,6 @@
 import { jsx, jsxs } from "react/jsx-runtime";
-import { Routes, Route } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import FlavorMapPage from "./pages/FlavorMapPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
@@ -13,9 +14,11 @@ import Navigation from "./components/Navigation";
 import PrivateRoute from "./components/PrivateRoute";
 import "./App.css";
 function App() {
+  const location = useLocation();
+
   return /* @__PURE__ */ jsxs("div", { className: "app", children: [
     /* @__PURE__ */ jsx(Navigation, {}),
-    /* @__PURE__ */ jsxs(Routes, { children: [
+    /* @__PURE__ */ jsx(AnimatePresence, { mode: "wait", children: /* @__PURE__ */ jsxs(Routes, { location, key: location.pathname, children: [
       /* @__PURE__ */ jsx(Route, { path: "/", element: /* @__PURE__ */ jsx(HomePage, {}) }),
       /* @__PURE__ */ jsx(Route, { path: "/flavor-map", element: /* @__PURE__ */ jsx(FlavorMapPage, {}) }),
       /* @__PURE__ */ jsx(Route, { path: "/recipe/:id", element: /* @__PURE__ */ jsx(RecipeDetailPage, {}) }),
@@ -43,7 +46,7 @@ function App() {
           element: /* @__PURE__ */ jsx(PrivateRoute, { children: /* @__PURE__ */ jsx(SettingsPage, {}) })
         }
       )
-    ] })
+    ] }) })
   ] });
 }
 var App_default = App;

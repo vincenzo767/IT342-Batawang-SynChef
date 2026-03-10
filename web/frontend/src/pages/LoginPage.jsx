@@ -1,6 +1,7 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthResponse, setLoading, setError } from "../store/authSlice";
 import authAPI from "../services/authAPI";
@@ -69,83 +70,104 @@ const LoginPage = () => {
     setLocalError("");
     setLocalInfo(`${provider} login is not available yet.`);
   };
-  return /* @__PURE__ */ jsx("div", { className: "login-page-shell", children: /* @__PURE__ */ jsxs("div", { className: "login-card", children: [
-    /* @__PURE__ */ jsxs("div", { className: "login-header", children: [
-      /* @__PURE__ */ jsx("h1", { children: "Recipe Discovery" }),
-      /* @__PURE__ */ jsx("p", { children: "Explore Global Culinary Traditions" })
-    ] }),
-    localError && /* @__PURE__ */ jsx("div", { className: "login-alert login-alert-error", children: localError }),
-    localInfo && /* @__PURE__ */ jsx("div", { className: "login-alert login-alert-info", children: localInfo }),
-    /* @__PURE__ */ jsxs("form", { onSubmit: handleLogin, className: "login-form", noValidate: true, children: [
-      /* @__PURE__ */ jsxs("div", { className: "login-field", children: [
-        /* @__PURE__ */ jsx("label", { htmlFor: "email", children: "Email Address" }),
-        /* @__PURE__ */ jsx(
-          "input",
-          {
-            id: "email",
-            type: "email",
-            placeholder: "you@example.com",
-            value: emailOrUsername,
-            onChange: (e) => setEmailOrUsername(e.target.value),
-            autoComplete: "email",
-            required: true
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxs("div", { className: "login-field", children: [
-        /* @__PURE__ */ jsx("label", { htmlFor: "password", children: "Password" }),
-        /* @__PURE__ */ jsx(
-          "input",
-          {
-            id: "password",
-            type: "password",
-            placeholder: "Enter your password",
-            value: password,
-            onChange: (e) => setPassword(e.target.value),
-            autoComplete: "current-password",
-            required: true
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxs("div", { className: "login-row", children: [
-        /* @__PURE__ */ jsxs("label", { className: "remember-me-control", htmlFor: "rememberMe", children: [
-          /* @__PURE__ */ jsx(
-            "input",
-            {
-              id: "rememberMe",
-              type: "checkbox",
-              checked: rememberMe,
-              onChange: (e) => setRememberMe(e.target.checked)
-            }
-          ),
-          /* @__PURE__ */ jsx("span", { children: "Remember me" })
+  return /* @__PURE__ */ jsx("div", { className: "login-page-shell", children: /* @__PURE__ */ jsxs(
+    motion.div,
+    {
+      className: "auth-layout",
+      initial: { opacity: 0, y: 16 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -14 },
+      transition: { duration: 0.3, ease: "easeOut" },
+      children: [
+        /* @__PURE__ */ jsxs("section", { className: "auth-brand-panel", children: [
+          /* @__PURE__ */ jsx("img", { src: "/synchef-logo.png", alt: "SynChef", className: "auth-brand-logo" }),
+          /* @__PURE__ */ jsxs("h1", { className: "auth-brand-title", children: [
+            "Discover ",
+            /* @__PURE__ */ jsx("span", { children: "Global" }),
+            " Flavors"
+          ] }),
+          /* @__PURE__ */ jsx("p", { className: "auth-brand-subtitle", children: "Explore authentic recipes from around the world, powered by AI-driven recommendations tailored to your taste." })
         ] }),
-        /* @__PURE__ */ jsx("button", { type: "button", className: "forgot-password-btn", onClick: handleForgotPassword, children: "Forgot password?" })
-      ] }),
-      /* @__PURE__ */ jsx("button", { type: "submit", className: "login-submit-btn", disabled: isLoading, children: isLoading ? "Signing In..." : "Sign In" })
-    ] }),
-    /* @__PURE__ */ jsx("div", { className: "signup-row", children: /* @__PURE__ */ jsxs("p", { children: [
-      "Don't have an account?",
-      " ",
-      /* @__PURE__ */ jsx(Link, { to: "/register", children: "Sign up" })
-    ] }) }),
-    /* @__PURE__ */ jsx("div", { className: "social-login-divider", children: /* @__PURE__ */ jsx("span", { children: "Or continue with" }) }),
-    /* @__PURE__ */ jsxs("div", { className: "social-login-grid", children: [
-      /* @__PURE__ */ jsxs("button", { type: "button", className: "social-btn", onClick: () => handleSocialLoginClick("Google"), children: [
-        /* @__PURE__ */ jsxs("svg", { className: "social-icon", viewBox: "0 0 24 24", "aria-hidden": "true", children: [
-          /* @__PURE__ */ jsx("path", { fill: "#4285F4", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a6.99 6.99 0 0 1-2.21 3.31v2.77h3.57a11.95 11.95 0 0 0 3.28-8.09z" }),
-          /* @__PURE__ */ jsx("path", { fill: "#34A853", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77a6.56 6.56 0 0 1-3.71 1.06c-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11.99 11.99 0 0 0 12 23z" }),
-          /* @__PURE__ */ jsx("path", { fill: "#FBBC05", d: "M5.84 14.09a7.03 7.03 0 0 1 0-4.18V7.07H2.18A11.99 11.99 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" }),
-          /* @__PURE__ */ jsx("path", { fill: "#EA4335", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11.95 11.95 0 0 0 12 1 11.99 11.99 0 0 0 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" })
-        ] }),
-        /* @__PURE__ */ jsx("span", { children: "Google" })
-      ] }),
-      /* @__PURE__ */ jsxs("button", { type: "button", className: "social-btn", onClick: () => handleSocialLoginClick("Facebook"), children: [
-        /* @__PURE__ */ jsx("svg", { className: "social-icon", fill: "#1877F2", viewBox: "0 0 24 24", "aria-hidden": "true", children: /* @__PURE__ */ jsx("path", { d: "M24 12.073C24 5.446 18.627.073 12 .073S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" }) }),
-        /* @__PURE__ */ jsx("span", { children: "Facebook" })
-      ] })
-    ] })
-  ] }) });
+        /* @__PURE__ */ jsxs("section", { className: "login-card", children: [
+          /* @__PURE__ */ jsxs("div", { className: "login-header", children: [
+            /* @__PURE__ */ jsx("h1", { children: "Recipe Discovery" }),
+            /* @__PURE__ */ jsx("p", { children: "Explore Global Culinary Traditions" })
+          ] }),
+          localError && /* @__PURE__ */ jsx("div", { className: "login-alert login-alert-error", children: localError }),
+          localInfo && /* @__PURE__ */ jsx("div", { className: "login-alert login-alert-info", children: localInfo }),
+          /* @__PURE__ */ jsxs("form", { onSubmit: handleLogin, className: "login-form", noValidate: true, children: [
+            /* @__PURE__ */ jsxs("div", { className: "login-field", children: [
+              /* @__PURE__ */ jsx("label", { htmlFor: "email", children: "Email Address" }),
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  id: "email",
+                  type: "email",
+                  placeholder: "you@example.com",
+                  value: emailOrUsername,
+                  onChange: (e) => setEmailOrUsername(e.target.value),
+                  autoComplete: "email",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "login-field", children: [
+              /* @__PURE__ */ jsx("label", { htmlFor: "password", children: "Password" }),
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  id: "password",
+                  type: "password",
+                  placeholder: "Enter your password",
+                  value: password,
+                  onChange: (e) => setPassword(e.target.value),
+                  autoComplete: "current-password",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "login-row", children: [
+              /* @__PURE__ */ jsxs("label", { className: "remember-me-control", htmlFor: "rememberMe", children: [
+                /* @__PURE__ */ jsx(
+                  "input",
+                  {
+                    id: "rememberMe",
+                    type: "checkbox",
+                    checked: rememberMe,
+                    onChange: (e) => setRememberMe(e.target.checked)
+                  }
+                ),
+                /* @__PURE__ */ jsx("span", { children: "Remember me" })
+              ] }),
+              /* @__PURE__ */ jsx("button", { type: "button", className: "forgot-password-btn", onClick: handleForgotPassword, children: "Forgot password?" })
+            ] }),
+            /* @__PURE__ */ jsx("button", { type: "submit", className: "login-submit-btn", disabled: isLoading, children: isLoading ? "Signing In..." : "Sign In" })
+          ] }),
+          /* @__PURE__ */ jsx("div", { className: "signup-row", children: /* @__PURE__ */ jsxs("p", { children: [
+            "Don't have an account?",
+            " ",
+            /* @__PURE__ */ jsx(Link, { to: "/register", children: "Sign up" })
+          ] }) }),
+          /* @__PURE__ */ jsx("div", { className: "social-login-divider", children: /* @__PURE__ */ jsx("span", { children: "Or continue with" }) }),
+          /* @__PURE__ */ jsxs("div", { className: "social-login-grid", children: [
+            /* @__PURE__ */ jsxs("button", { type: "button", className: "social-btn", onClick: () => handleSocialLoginClick("Google"), children: [
+              /* @__PURE__ */ jsxs("svg", { className: "social-icon", viewBox: "0 0 24 24", "aria-hidden": "true", children: [
+                /* @__PURE__ */ jsx("path", { fill: "#4285F4", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a6.99 6.99 0 0 1-2.21 3.31v2.77h3.57a11.95 11.95 0 0 0 3.28-8.09z" }),
+                /* @__PURE__ */ jsx("path", { fill: "#34A853", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77a6.56 6.56 0 0 1-3.71 1.06c-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11.99 11.99 0 0 0 12 23z" }),
+                /* @__PURE__ */ jsx("path", { fill: "#FBBC05", d: "M5.84 14.09a7.03 7.03 0 0 1 0-4.18V7.07H2.18A11.99 11.99 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" }),
+                /* @__PURE__ */ jsx("path", { fill: "#EA4335", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11.95 11.95 0 0 0 12 1 11.99 11.99 0 0 0 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" })
+              ] }),
+              /* @__PURE__ */ jsx("span", { children: "Google" })
+            ] }),
+            /* @__PURE__ */ jsxs("button", { type: "button", className: "social-btn", onClick: () => handleSocialLoginClick("Facebook"), children: [
+              /* @__PURE__ */ jsx("svg", { className: "social-icon", fill: "#1877F2", viewBox: "0 0 24 24", "aria-hidden": "true", children: /* @__PURE__ */ jsx("path", { d: "M24 12.073C24 5.446 18.627.073 12 .073S0 5.446 0 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" }) }),
+              /* @__PURE__ */ jsx("span", { children: "Facebook" })
+            ] })
+          ] })
+        ] })
+      ]
+    }
+  ) });
 };
 var LoginPage_default = LoginPage;
 export {
