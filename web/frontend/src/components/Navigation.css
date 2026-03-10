@@ -14,7 +14,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
-  height: 68px;
+  height: 76px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -30,7 +30,7 @@
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
   color: #ffffff;
   font-size: 34px;
@@ -41,14 +41,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
   color: #fdcb58;
 }
 
 .brand-icon {
   font-size: 20px;
+}
+
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-icon-fallback {
+  display: none;
+  font-size: 34px;
 }
 
 .brand-name {
@@ -165,6 +177,10 @@
 
 @media (max-width: 768px) {
   .nav-container {
+    height: 70px;
+  }
+
+  .nav-container {
     padding: 0 16px;
   }
 
@@ -174,6 +190,16 @@
 
   .brand-name {
     font-size: 28px;
+  }
+
+  .brand-icon-wrap {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-logo-img {
+    width: 38px;
+    height: 38px;
   }
 
   .nav-link span {

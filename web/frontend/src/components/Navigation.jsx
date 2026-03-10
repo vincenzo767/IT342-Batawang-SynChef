@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FaHome, FaUser, FaSignOutAlt, FaUtensils, FaCog, FaTachometerAlt } from "react-icons/fa";
 import { logout } from "../store/authSlice";
 import "./Navigation.css";
+const brandLogoPath = "/synchef-logo.png";
 const Navigation = () => {
   const location = useLocation();
   const dispatch = useDispatch();
@@ -15,7 +16,24 @@ const Navigation = () => {
   };
   return /* @__PURE__ */ jsx("nav", { className: "navigation", children: /* @__PURE__ */ jsxs("div", { className: "nav-container", children: [
     /* @__PURE__ */ jsxs(Link, { to: "/", className: "nav-brand", children: [
-      /* @__PURE__ */ jsx("span", { className: "brand-icon-wrap", children: /* @__PURE__ */ jsx(FaUtensils, { className: "brand-icon" }) }),
+      /* @__PURE__ */ jsxs("span", { className: "brand-icon-wrap", children: [
+        /* @__PURE__ */ jsx(
+          "img",
+          {
+            src: brandLogoPath,
+            alt: "SynChef logo",
+            className: "brand-logo-img",
+            onError: (event) => {
+              event.currentTarget.style.display = "none";
+              const fallbackIcon = event.currentTarget.nextSibling;
+              if (fallbackIcon) {
+                fallbackIcon.style.display = "inline-flex";
+              }
+            }
+          }
+        ),
+        /* @__PURE__ */ jsx(FaUtensils, { className: "brand-icon brand-icon-fallback" })
+      ] }),
       /* @__PURE__ */ jsx("span", { className: "brand-name", children: "SynChef" })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "nav-right", children: [
