@@ -1,29 +1,19 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface UIState {
-  isFocusMode: boolean;
-  currentStepIndex: number;
-  showFlavorMap: boolean;
-  selectedContinent: string | null;
-  theme: 'light' | 'dark';
-}
-
-const initialState: UIState = {
+import { createSlice } from "@reduxjs/toolkit";
+const initialState = {
   isFocusMode: false,
   currentStepIndex: 0,
   showFlavorMap: false,
   selectedContinent: null,
-  theme: 'light',
+  theme: "light"
 };
-
 const uiSlice = createSlice({
-  name: 'ui',
+  name: "ui",
   initialState,
   reducers: {
     toggleFocusMode: (state) => {
       state.isFocusMode = !state.isFocusMode;
     },
-    setFocusMode: (state, action: PayloadAction<boolean>) => {
+    setFocusMode: (state, action) => {
       state.isFocusMode = action.payload;
     },
     nextStep: (state) => {
@@ -34,22 +24,21 @@ const uiSlice = createSlice({
         state.currentStepIndex -= 1;
       }
     },
-    setCurrentStepIndex: (state, action: PayloadAction<number>) => {
+    setCurrentStepIndex: (state, action) => {
       state.currentStepIndex = action.payload;
     },
     toggleFlavorMap: (state) => {
       state.showFlavorMap = !state.showFlavorMap;
     },
-    setSelectedContinent: (state, action: PayloadAction<string | null>) => {
+    setSelectedContinent: (state, action) => {
       state.selectedContinent = action.payload;
     },
     toggleTheme: (state) => {
-      state.theme = state.theme === 'light' ? 'dark' : 'light';
-    },
-  },
+      state.theme = state.theme === "light" ? "dark" : "light";
+    }
+  }
 });
-
-export const {
+const {
   toggleFocusMode,
   setFocusMode,
   nextStep,
@@ -57,7 +46,17 @@ export const {
   setCurrentStepIndex,
   toggleFlavorMap,
   setSelectedContinent,
-  toggleTheme,
+  toggleTheme
 } = uiSlice.actions;
-
-export default uiSlice.reducer;
+var uiSlice_default = uiSlice.reducer;
+export {
+  uiSlice_default as default,
+  nextStep,
+  previousStep,
+  setCurrentStepIndex,
+  setFocusMode,
+  setSelectedContinent,
+  toggleFlavorMap,
+  toggleFocusMode,
+  toggleTheme
+};
