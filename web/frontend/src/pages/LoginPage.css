@@ -1,24 +1,26 @@
 .login-page-shell {
-  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px 16px;
+  padding: calc(68px + 18px) 16px 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .login-card {
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.32);
-  padding: 34px 28px;
+  padding: 28px 24px;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .login-header h1 {
@@ -55,7 +57,7 @@
 
 .login-form {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .login-field {
@@ -73,7 +75,7 @@
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 11px 13px;
   font-size: 0.95rem;
   color: #111827;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -126,7 +128,7 @@
   width: 100%;
   border: none;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 11px 14px;
   color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
@@ -168,7 +170,7 @@
 
 .social-login-divider {
   position: relative;
-  margin: 24px 0 14px;
+  margin: 18px 0 12px;
   text-align: center;
 }
 
@@ -228,11 +230,11 @@
 
 @media (max-width: 600px) {
   .login-page-shell {
-    padding: 18px 12px;
+    padding: calc(68px + 14px) 12px 18px;
   }
 
   .login-card {
-    padding: 24px 18px;
+    padding: 22px 16px;
   }
 
   .login-header h1 {
