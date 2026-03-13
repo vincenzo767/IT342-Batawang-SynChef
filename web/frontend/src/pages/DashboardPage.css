@@ -31,6 +31,30 @@
   color: #6b7280;
 }
 
+.welcome-country-tag {
+  margin-top: 10px !important;
+  font-size: 0.9rem;
+  color: #4b5563 !important;
+  background: #f3f0ff;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd6fe;
+}
+
+.discovered-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.discovered-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

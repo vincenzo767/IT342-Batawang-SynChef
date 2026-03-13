@@ -1,189 +1,375 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaClock, FaUsers, FaPlay, FaUtensils } from "react-icons/fa";
+import { FaClock, FaUsers, FaPlay, FaUtensils, FaMapMarkerAlt, FaFire } from "react-icons/fa";
 import { recipeApi } from "../api";
+import { ALL_RECIPES } from "../data/recipes";
 import "./RecipeDetailPage.css";
+
+// Parse amount string like "400g", "2 tbsp", "1 cup" into { qty, unit }
+function parseAmount(amountStr) {
+  if (!amountStr) return { qty: 1, unit: "" };
+  const match = String(amountStr).match(/^([\d./]+(?:\s*[\d./]+)?)\s*(.*)/);
+  if (!match) return { qty: 1, unit: amountStr };
+  const numStr = match[1].trim();
+  // Handle fractions like "1/2"
+  let qty = 1;
+  if (numStr.includes("/")) {
+    const [a, b] = numStr.split("/").map(Number);
+    qty = b ? a / b : 1;
+  } else {
+    qty = parseFloat(numStr) || 1;
+  }
+  return { qty, unit: match[2].trim() };
+}
+
+// Convert ALL_RECIPES local format → normalized display format
+function normalizeLocalRecipe(r) {
+  return {
+    id: r.id,
+    title: r.title,
+    countryName: r.country,
+    flagEmoji: r.flagEmoji,
+    cuisine: r.cuisine,
+    description: r.description,
+    totalMinutes: r.totalMinutes,
+    difficulty: r.difficulty,
+    servings: r.servings,
+    image: r.image,
+    region: r.region,
+    culturalContext: r.culturalContext || null,
+    categories: r.cuisine ? [{ id: 1, name: r.cuisine, color: "#667eea", icon: "🍽️" }] : [],
+    ingredients: (r.ingredients || []).map((ing, idx) => {
+      const { qty, unit } = parseAmount(ing.amount);
+      return {
+        id: idx + 1,
+        qty,
+        unit,
+        rawAmount: ing.amount,
+        name: ing.item,
+        prep: ing.prep || "",
+        optional: ing.optional || false
+      };
+    }),
+    steps: (r.steps || []).map((step, idx) => ({
+      id: idx + 1,
+      order: idx + 1,
+      instruction: step.instruction,
+      hasTimer: !!step.timer,
+      timerLabel: step.timerLabel || "",
+      timerSeconds: step.timer || 0,
+      tip: step.tip || ""
+    }))
+  };
+}
+
+// Convert backend API format → normalized display format
+function normalizeBackendRecipe(r) {
+  return {
+    id: r.id,
+    title: r.name,
+    countryName: r.country?.name || "",
+    flagEmoji: r.country?.flagEmoji || "",
+    cuisine: r.categories?.[0]?.name || "",
+    description: r.description,
+    totalMinutes: r.totalTimeMinutes,
+    difficulty: r.difficultyLevel,
+    servings: r.defaultServings,
+    image: r.imageUrl || null,
+    region: r.country?.continent || "",
+    culturalContext: r.culturalContext || null,
+    categories: (r.categories || []).map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      color: cat.colorCode || "#667eea",
+      icon: cat.iconName || "🍽️"
+    })),
+    ingredients: (r.ingredients || []).map((ri, idx) => ({
+      id: ri.id || idx + 1,
+      qty: ri.quantity,
+      unit: ri.unit || "",
+      rawAmount: `${ri.quantity} ${ri.unit || ""}`.trim(),
+      name: ri.ingredient?.name || ri.name || "",
+      prep: ri.preparation || "",
+      optional: ri.isOptional || false
+    })),
+    steps: (r.steps || []).map((step) => ({
+      id: step.id,
+      order: step.orderIndex,
+      instruction: step.instruction,
+      hasTimer: step.hasTimer || !!step.timerSeconds,
+      timerLabel: step.timerLabel || "",
+      timerSeconds: step.timerSeconds || 0,
+      tip: step.tips || ""
+    }))
+  };
+}
+
+function scaleAmount(rawAmount, qty, baseServings, currentServings) {
+  if (!rawAmount && !qty) return "";
+  const scale = currentServings / baseServings;
+  if (qty && qty !== 1) {
+    const scaled = Math.round(qty * scale * 10) / 10;
+    return `${scaled}`;
+  }
+  // Try to scale the raw amount string
+  const match = String(rawAmount).match(/^([\d./]+(?:\s*[\d./]+)?)\s*(.*)/);
+  if (!match) return rawAmount;
+  let num;
+  if (match[1].includes("/")) {
+    const [a, b] = match[1].split("/").map(Number);
+    num = b ? a / b : parseFloat(match[1]);
+  } else {
+    num = parseFloat(match[1]);
+  }
+  if (isNaN(num)) return rawAmount;
+  const scaled = Math.round(num * scale * 10) / 10;
+  return `${scaled}${match[2] ? " " + match[2] : ""}`;
+}
+
+function formatTimer(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s > 0 ? s + "s" : ""}`.trim() : `${s}s`;
+}
+
 const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [recipe, setRecipe] = useState(null);
   const [servings, setServings] = useState(4);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (id) {
-      loadRecipe(parseInt(id));
-    }
+    loadRecipe(Number.parseInt(id));
   }, [id]);
+
   const loadRecipe = async (recipeId) => {
+    // 1. Check if FlavorMap passed local recipe via router state
+    if (location.state?.localRecipe) {
+      const norm = normalizeLocalRecipe(location.state.localRecipe);
+      setRecipe(norm);
+      setServings(norm.servings);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Try to find in ALL_RECIPES by ID (instant, no network needed)
+    const localMatch = ALL_RECIPES.find((r) => r.id === recipeId);
+    if (localMatch) {
+      const norm = normalizeLocalRecipe(localMatch);
+      setRecipe(norm);
+      setServings(norm.servings);
+      setLoading(false);
+      return;
+    }
+
+    // 3. Fallback to backend API
     try {
       const response = await recipeApi.getById(recipeId);
-      setRecipe(response.data);
-      setServings(response.data.defaultServings);
-    } catch (error) {
-      console.error("Failed to load recipe:", error);
+      const norm = normalizeBackendRecipe(response.data);
+      setRecipe(norm);
+      setServings(norm.servings || 4);
+    } catch {
+      setRecipe(null);
     } finally {
       setLoading(false);
     }
   };
+
   const handleStartCooking = () => {
-    navigate(`/cooking/${id}?servings=${servings}`);
+    navigate(`/cooking/${id}?servings=${servings}`, {
+      state: { localRecipe: location.state?.localRecipe || ALL_RECIPES.find((r) => r.id === Number.parseInt(id)) || null }
+    });
   };
+
   if (loading) {
-    return /* @__PURE__ */ jsx("div", { className: "recipe-detail-page page", children: /* @__PURE__ */ jsx("div", { className: "loading", children: /* @__PURE__ */ jsx("div", { className: "spinner" }) }) });
+    return (
+      <div className="recipe-detail-page page">
+        <div className="loading">
+          <div className="spinner" />
+        </div>
+      </div>
+    );
   }
+
   if (!recipe) {
-    return /* @__PURE__ */ jsx("div", { className: "recipe-detail-page page", children: /* @__PURE__ */ jsx("div", { className: "container", children: /* @__PURE__ */ jsx("h2", { children: "Recipe not found" }) }) });
+    return (
+      <div className="recipe-detail-page page">
+        <div className="container">
+          <h2>Recipe not found</h2>
+          <button className="btn btn-primary" onClick={() => navigate("/")}>Back to Home</button>
+        </div>
+      </div>
+    );
   }
-  return /* @__PURE__ */ jsx("div", { className: "recipe-detail-page page", children: /* @__PURE__ */ jsxs("div", { className: "container", children: [
-    /* @__PURE__ */ jsxs(
-      motion.div,
-      {
-        initial: { opacity: 0, y: -20 },
-        animate: { opacity: 1, y: 0 },
-        className: "recipe-header-section",
-        children: [
-          /* @__PURE__ */ jsxs("div", { className: "recipe-title-area", children: [
-            /* @__PURE__ */ jsx("h1", { children: recipe.name }),
-            /* @__PURE__ */ jsx("span", { className: "country-flag-xl", children: recipe.country.flagEmoji })
-          ] }),
-          /* @__PURE__ */ jsx("p", { className: "recipe-subtitle", children: recipe.description }),
-          /* @__PURE__ */ jsxs("div", { className: "recipe-stats", children: [
-            /* @__PURE__ */ jsxs("div", { className: "stat-item", children: [
-              /* @__PURE__ */ jsx(FaClock, { className: "stat-icon" }),
-              /* @__PURE__ */ jsxs("div", { children: [
-                /* @__PURE__ */ jsxs("div", { className: "stat-value", children: [
-                  recipe.totalTimeMinutes,
-                  " min"
-                ] }),
-                /* @__PURE__ */ jsx("div", { className: "stat-label", children: "Total Time" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxs("div", { className: "stat-item", children: [
-              /* @__PURE__ */ jsx(FaUtensils, { className: "stat-icon" }),
-              /* @__PURE__ */ jsxs("div", { children: [
-                /* @__PURE__ */ jsx("div", { className: "stat-value", children: recipe.difficultyLevel }),
-                /* @__PURE__ */ jsx("div", { className: "stat-label", children: "Difficulty" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxs("div", { className: "stat-item", children: [
-              /* @__PURE__ */ jsx(FaUsers, { className: "stat-icon" }),
-              /* @__PURE__ */ jsxs("div", { children: [
-                /* @__PURE__ */ jsx("div", { className: "stat-value", children: recipe.defaultServings }),
-                /* @__PURE__ */ jsx("div", { className: "stat-label", children: "Default Servings" })
-              ] })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsx("div", { className: "categories-list", children: recipe.categories.map((cat) => /* @__PURE__ */ jsxs("span", { className: "category-badge", style: { background: cat.colorCode }, children: [
-            cat.iconName,
-            " ",
-            cat.name
-          ] }, cat.id)) })
-        ]
-      }
-    ),
-    recipe.culturalContext && /* @__PURE__ */ jsxs(
-      motion.div,
-      {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        transition: { delay: 0.2 },
-        className: "cultural-context card",
-        children: [
-          /* @__PURE__ */ jsx("h3", { children: "\u{1F30D} Cultural Context" }),
-          /* @__PURE__ */ jsx("p", { children: recipe.culturalContext })
-        ]
-      }
-    ),
-    /* @__PURE__ */ jsxs("div", { className: "recipe-content", children: [
-      /* @__PURE__ */ jsxs(
-        motion.div,
-        {
-          initial: { opacity: 0, x: -20 },
-          animate: { opacity: 1, x: 0 },
-          transition: { delay: 0.3 },
-          className: "ingredients-section card",
-          children: [
-            /* @__PURE__ */ jsx("h2", { children: "Ingredients" }),
-            /* @__PURE__ */ jsxs("div", { className: "servings-control", children: [
-              /* @__PURE__ */ jsx("label", { children: "Servings:" }),
-              /* @__PURE__ */ jsxs("div", { className: "servings-buttons", children: [
-                /* @__PURE__ */ jsx("button", { onClick: () => setServings(Math.max(1, servings - 1)), children: "-" }),
-                /* @__PURE__ */ jsx("span", { children: servings }),
-                /* @__PURE__ */ jsx("button", { onClick: () => setServings(servings + 1), children: "+" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsx("ul", { className: "ingredients-list", children: recipe.ingredients.map((ri) => {
-              const scaledQty = ri.quantity * servings / recipe.defaultServings;
-              return /* @__PURE__ */ jsxs("li", { className: ri.isOptional ? "optional" : "", children: [
-                /* @__PURE__ */ jsxs("span", { className: "ingredient-quantity", children: [
-                  scaledQty.toFixed(2),
-                  " ",
-                  ri.unit
-                ] }),
-                /* @__PURE__ */ jsxs("span", { className: "ingredient-name", children: [
-                  ri.ingredient.name,
-                  ri.preparation && ` (${ri.preparation})`
-                ] }),
-                ri.isOptional && /* @__PURE__ */ jsx("span", { className: "optional-tag", children: "Optional" })
-              ] }, ri.id);
-            }) })
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxs(
-        motion.div,
-        {
-          initial: { opacity: 0, x: 20 },
-          animate: { opacity: 1, x: 0 },
-          transition: { delay: 0.4 },
-          className: "instructions-section card",
-          children: [
-            /* @__PURE__ */ jsx("h2", { children: "Instructions" }),
-            /* @__PURE__ */ jsx("div", { className: "steps-list", children: recipe.steps.map((step) => /* @__PURE__ */ jsxs("div", { className: "step-item", children: [
-              /* @__PURE__ */ jsx("div", { className: "step-number", children: step.orderIndex }),
-              /* @__PURE__ */ jsxs("div", { className: "step-content", children: [
-                /* @__PURE__ */ jsx("p", { children: step.instruction }),
-                step.hasTimer && /* @__PURE__ */ jsxs("div", { className: "step-timer-info", children: [
-                  "\u23F1\uFE0F Timer: ",
-                  step.timerLabel || "Set timer",
-                  " for",
-                  " ",
-                  Math.floor(step.timerSeconds / 60),
-                  " min ",
-                  step.timerSeconds % 60,
-                  " sec"
-                ] }),
-                step.tips && /* @__PURE__ */ jsxs("div", { className: "step-tip", children: [
-                  "\u{1F4A1} Tip: ",
-                  step.tips
-                ] })
-              ] })
-            ] }, step.id)) })
-          ]
-        }
-      )
-    ] }),
-    /* @__PURE__ */ jsxs(
-      motion.div,
-      {
-        initial: { opacity: 0, y: 20 },
-        animate: { opacity: 1, y: 0 },
-        transition: { delay: 0.5 },
-        className: "start-cooking-section",
-        children: [
-          /* @__PURE__ */ jsxs("button", { onClick: handleStartCooking, className: "btn btn-primary btn-large", children: [
-            /* @__PURE__ */ jsx(FaPlay, {}),
-            "Start Cooking Mode"
-          ] }),
-          /* @__PURE__ */ jsx("p", { className: "cooking-mode-hint", children: "Enter Focus Mode with parallel timers and step-by-step guidance" })
-        ]
-      }
-    )
-  ] }) });
+
+  const baseServings = recipe.servings || 4;
+
+  return (
+    <div className="recipe-detail-page page">
+      <div className="container">
+        {/* Hero image */}
+        {recipe.image && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="recipe-hero-img-wrap"
+          >
+            <img src={recipe.image} alt={recipe.title} className="recipe-hero-img" />
+            <div className="recipe-hero-overlay" />
+          </motion.div>
+        )}
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="recipe-header-section"
+        >
+          <div className="recipe-title-area">
+            <h1>{recipe.title}</h1>
+            <span className="country-flag-xl">{recipe.flagEmoji}</span>
+          </div>
+          <p className="recipe-subtitle">{recipe.description}</p>
+
+          <div className="recipe-stats">
+            <div className="stat-item">
+              <FaClock className="stat-icon" />
+              <div>
+                <div className="stat-value">{recipe.totalMinutes} min</div>
+                <div className="stat-label">Total Time</div>
+              </div>
+            </div>
+            <div className="stat-item">
+              <FaFire className="stat-icon" />
+              <div>
+                <div className="stat-value">{recipe.difficulty}</div>
+                <div className="stat-label">Difficulty</div>
+              </div>
+            </div>
+            <div className="stat-item">
+              <FaUsers className="stat-icon" />
+              <div>
+                <div className="stat-value">{servings}</div>
+                <div className="stat-label">Servings</div>
+              </div>
+            </div>
+            {recipe.countryName && (
+              <div className="stat-item">
+                <FaMapMarkerAlt className="stat-icon" />
+                <div>
+                  <div className="stat-value">{recipe.countryName}</div>
+                  <div className="stat-label">{recipe.region}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {recipe.categories.length > 0 && (
+            <div className="categories-list">
+              {recipe.categories.map((cat) => (
+                <span key={cat.id} className="category-badge" style={{ background: cat.color }}>
+                  {cat.icon} {cat.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Cultural context */}
+        {recipe.culturalContext && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="cultural-context card"
+          >
+            <h3>🌍 Cultural Context</h3>
+            <p>{recipe.culturalContext}</p>
+          </motion.div>
+        )}
+
+        {/* Ingredients + Steps */}
+        <div className="recipe-content">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="ingredients-section card"
+          >
+            <h2>Ingredients</h2>
+            <div className="servings-control">
+              <label>Servings:</label>
+              <div className="servings-buttons">
+                <button onClick={() => setServings((s) => Math.max(1, s - 1))}>−</button>
+                <span>{servings}</span>
+                <button onClick={() => setServings((s) => s + 1)}>+</button>
+              </div>
+            </div>
+            <ul className="ingredients-list">
+              {recipe.ingredients.map((ing) => (
+                <li key={ing.id} className={ing.optional ? "optional" : ""}>
+                  <span className="ingredient-quantity">
+                    {scaleAmount(ing.rawAmount, ing.qty, baseServings, servings)}
+                    {ing.unit && !ing.rawAmount?.includes(ing.unit) ? ` ${ing.unit}` : ""}
+                  </span>
+                  <span className="ingredient-name">
+                    {ing.name}
+                    {ing.prep ? `, ${ing.prep}` : ""}
+                  </span>
+                  {ing.optional && <span className="optional-tag">Optional</span>}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="instructions-section card"
+          >
+            <h2>Instructions</h2>
+            <div className="steps-list">
+              {recipe.steps.map((step) => (
+                <div key={step.id} className="step-item">
+                  <div className="step-number">{step.order}</div>
+                  <div className="step-content">
+                    <p>{step.instruction}</p>
+                    {step.hasTimer && (
+                      <div className="step-timer-info">
+                        ⏱️ {step.timerLabel || "Timer"}: {formatTimer(step.timerSeconds)}
+                      </div>
+                    )}
+                    {step.tip && (
+                      <div className="step-tip">💡 Tip: {step.tip}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Start Cooking */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="start-cooking-section"
+        >
+          <button onClick={handleStartCooking} className="btn btn-primary btn-large">
+            <FaPlay /> Start Cooking Mode
+          </button>
+          <p className="cooking-mode-hint">
+            Enter Focus Mode with parallel timers and step-by-step guidance
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
 };
-var RecipeDetailPage_default = RecipeDetailPage;
-export {
-  RecipeDetailPage_default as default
-};
+
+export default RecipeDetailPage;

@@ -1,6 +1,42 @@
 /* ── Layout ───────────────────────────────────────────────────── */
 .home-page { flex: 1; }
 
+/* ── Personalized Recommendations ────────────────────────────── */
+.hp-recommendations {
+  margin: 0 0 36px 0;
+}
+
+.hp-rec-header {
+  margin-bottom: 18px;
+}
+
+.hp-rec-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.hp-rec-title-row h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.hp-rec-star {
+  color: #fbbf24;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.hp-rec-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.78);
+  padding-left: 2px;
+}
+
 .synchef-gradient-bg {
   min-height: 100%;
   background: linear-gradient(135deg, #4a5fc1 0%, #6c63ff 50%, #7b52ab 100%);

@@ -1,16 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
+
 const loadStoredUser = () => {
-  const raw = localStorage.getItem("user");
-  if (!raw) {
-    return null;
-  }
   try {
-    return JSON.parse(raw);
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
   } catch {
     localStorage.removeItem("user");
     return null;
   }
 };
+
 const initialState = {
   user: loadStoredUser(),
   token: localStorage.getItem("token"),
@@ -18,6 +17,7 @@ const initialState = {
   error: null,
   isAuthenticated: !!localStorage.getItem("token")
 };
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -38,13 +38,29 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       localStorage.setItem("token", action.payload);
     },
+    // Call this after login or register with the full backend AuthResponse
     setAuthResponse: (state, action) => {
-      state.token = action.payload.token;
-      state.user = action.payload.user;
+      const { token, user } = action.payload;
+      state.token = token;
+      state.user = user;
       state.isAuthenticated = true;
       state.error = null;
-      localStorage.setItem("token", action.payload.token);
-      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      // Keep userCountry in sync for any legacy code still reading it
+      if (user?.countryCode || user?.countryName) {
+        localStorage.setItem(
+          "userCountry",
+          JSON.stringify({ code: user.countryCode || "", name: user.countryName || "" })
+        );
+      }
+    },
+    // Update favorites in the Redux store + localStorage after any API call
+    setFavorites: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, favoriteRecipeIds: action.payload };
+        localStorage.setItem("user", JSON.stringify(state.user));
+      }
     },
     logout: (state) => {
       state.user = null;
@@ -59,23 +75,16 @@ const authSlice = createSlice({
     }
   }
 });
-const {
+
+export const {
   setLoading,
   setError,
   setUser,
   setToken,
   setAuthResponse,
+  setFavorites,
   logout,
   clearError
 } = authSlice.actions;
-var authSlice_default = authSlice.reducer;
-export {
-  clearError,
-  authSlice_default as default,
-  logout,
-  setAuthResponse,
-  setError,
-  setLoading,
-  setToken,
-  setUser
-};
+
+export default authSlice.reducer;

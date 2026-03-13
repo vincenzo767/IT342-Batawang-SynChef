@@ -1,14 +1,15 @@
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import ReactCountryFlag from "react-country-flag";
-import { FaChevronLeft, FaChevronRight, FaSearch, FaTimes } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaSearch, FaTimes, FaClock, FaFire } from "react-icons/fa";
 import { countryApi, recipeApi } from "../api";
+import { ALL_RECIPES } from "../data/recipes";
 import "./FlavorMapPage.css";
+
 const continentColors = {
   "Asia": "#ec4899",
   "Europe": "#f59e0b",
@@ -20,7 +21,9 @@ const continentColors = {
 const continentOrder = ["Asia", "Europe", "Africa", "North America", "South America", "Oceania"];
 const defaultContinent = continentOrder[0];
 const countriesPageSize = 12;
-const restCountriesApiUrl = "https://restcountries.com/v3.1/all?fields=cca2,name,region,subregion,capital,latlng,flag,independent,unMember";
+const restCountriesApiUrl =
+  "https://restcountries.com/v3.1/all?fields=cca2,name,region,subregion,capital,latlng,flag,independent,unMember";
+
 const continentHotspots = {
   "Asia": { latitude: 33, longitude: 95, markerRadius: 0.03, hitRadius: 0.09 },
   "Europe": { latitude: 51, longitude: 15, markerRadius: 0.028, hitRadius: 0.085 },
@@ -29,6 +32,7 @@ const continentHotspots = {
   "South America": { latitude: -18, longitude: -60, markerRadius: 0.029, hitRadius: 0.088 },
   "Oceania": { latitude: -23, longitude: 134, markerRadius: 0.028, hitRadius: 0.085 }
 };
+
 const continentShapes = {
   "Asia": "M18,70 L36,42 L70,35 L112,18 L148,26 L178,46 L188,64 L170,88 L136,98 L92,94 L56,102 L24,90 Z",
   "Europe": "M24,70 L46,44 L82,36 L118,40 L148,56 L136,80 L106,88 L74,84 L52,94 L30,86 Z",
@@ -37,11 +41,10 @@ const continentShapes = {
   "South America": "M98,14 L126,30 L138,58 L126,86 L108,114 L88,104 L76,74 L80,42 Z",
   "Oceania": "M26,70 L52,56 L86,60 L114,76 L98,94 L64,96 L42,88 Z"
 };
+
 const normalizeContinentName = (name) => name.replace(/_/g, " ");
-const getContinentColor = (name) => {
-  const normalizedName = normalizeContinentName(name);
-  return continentColors[normalizedName] || "#667eea";
-};
+const getContinentColor = (name) => continentColors[normalizeContinentName(name)] || "#667eea";
+
 const toSpherePosition = (latitude, longitude, radius) => {
   const phi = (90 - latitude) * (Math.PI / 180);
   const theta = (longitude + 180) * (Math.PI / 180);
@@ -50,6 +53,19 @@ const toSpherePosition = (latitude, longitude, radius) => {
   const z = radius * Math.sin(phi) * Math.sin(theta);
   return new THREE.Vector3(x, y, z);
 };
+
+// Normalize a local (ALL_RECIPES) recipe to the FlavorMap display format
+const toFlavorMapRecipe = (r) => ({
+  id: r.id,
+  name: r.title,
+  description: r.description,
+  totalTimeMinutes: r.totalMinutes,
+  difficultyLevel: r.difficulty,
+  image: r.image,
+  culturalContext: r.culturalContext || null,
+  _raw: r
+});
+
 const ContinentHotspot = ({ continent, selectedContinent, onSelect }) => {
   const normalizedName = normalizeContinentName(continent);
   const hotspot = continentHotspots[normalizedName];
@@ -57,6 +73,7 @@ const ContinentHotspot = ({ continent, selectedContinent, onSelect }) => {
   const meshRef = useRef(null);
   const pulseRef = useRef(null);
   const isSelected = selectedContinent === continent;
+
   const surfacePosition = useMemo(
     () => toSpherePosition(hotspot.latitude, hotspot.longitude, 1.012),
     [hotspot.latitude, hotspot.longitude]
@@ -66,6 +83,7 @@ const ContinentHotspot = ({ continent, selectedContinent, onSelect }) => {
     () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal),
     [normal]
   );
+
   useFrame(({ clock }) => {
     const pulseWave = (Math.sin(clock.elapsedTime * 4.2) + 1) / 2;
     const pulseScale = 1 + pulseWave * 0.18;
@@ -77,44 +95,34 @@ const ContinentHotspot = ({ continent, selectedContinent, onSelect }) => {
       meshRef.current.scale.setScalar(isSelected ? selectedScale : 1);
     }
   });
-  return /* @__PURE__ */ jsxs("group", { children: [
-    /* @__PURE__ */ jsxs("mesh", { ref: pulseRef, position: surfacePosition, quaternion: orientation, children: [
-      /* @__PURE__ */ jsx("ringGeometry", { args: [hotspot.markerRadius * 1.35, hotspot.markerRadius * 1.9, 40] }),
-      /* @__PURE__ */ jsx("meshBasicMaterial", { color, transparent: true, opacity: isSelected ? 1 : 0.42, side: THREE.DoubleSide })
-    ] }),
-    /* @__PURE__ */ jsxs(
-      "mesh",
-      {
-        ref: meshRef,
-        position: surfacePosition,
-        quaternion: orientation,
-        onClick: (event) => {
-          event.stopPropagation();
-          onSelect(continent);
-        },
-        children: [
-          /* @__PURE__ */ jsx("circleGeometry", { args: [hotspot.markerRadius, 36] }),
-          /* @__PURE__ */ jsx("meshStandardMaterial", { color, emissive: color, emissiveIntensity: isSelected ? 1.05 : 0.22, transparent: true, opacity: 0.98, side: THREE.DoubleSide })
-        ]
-      }
-    ),
-    /* @__PURE__ */ jsxs(
-      "mesh",
-      {
-        position: surfacePosition,
-        quaternion: orientation,
-        onClick: (event) => {
-          event.stopPropagation();
-          onSelect(continent);
-        },
-        children: [
-          /* @__PURE__ */ jsx("circleGeometry", { args: [hotspot.hitRadius, 28] }),
-          /* @__PURE__ */ jsx("meshBasicMaterial", { transparent: true, opacity: 0, side: THREE.DoubleSide })
-        ]
-      }
-    )
-  ] });
+
+  return (
+    <group>
+      <mesh ref={pulseRef} position={surfacePosition} quaternion={orientation}>
+        <ringGeometry args={[hotspot.markerRadius * 1.35, hotspot.markerRadius * 1.9, 40]} />
+        <meshBasicMaterial color={color} transparent opacity={isSelected ? 1 : 0.42} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh
+        ref={meshRef}
+        position={surfacePosition}
+        quaternion={orientation}
+        onClick={(e) => { e.stopPropagation(); onSelect(continent); }}
+      >
+        <circleGeometry args={[hotspot.markerRadius, 36]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 1.05 : 0.22} transparent opacity={0.98} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh
+        position={surfacePosition}
+        quaternion={orientation}
+        onClick={(e) => { e.stopPropagation(); onSelect(continent); }}
+      >
+        <circleGeometry args={[hotspot.hitRadius, 28]} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
 };
+
 const GlobeScene = ({ continents, selectedContinent, onSelect }) => {
   const globeRef = useRef(null);
   const cloudRef = useRef(null);
@@ -127,227 +135,198 @@ const GlobeScene = ({ continents, selectedContinent, onSelect }) => {
   earthMap.colorSpace = THREE.SRGBColorSpace;
   earthSpecularMap.colorSpace = THREE.SRGBColorSpace;
   cloudMap.colorSpace = THREE.SRGBColorSpace;
+
   useFrame((_, delta) => {
-    if (globeRef.current) {
-      globeRef.current.rotation.y += delta / 16;
-    }
-    if (cloudRef.current) {
-      cloudRef.current.rotation.y += delta / 10;
-    }
+    if (globeRef.current) globeRef.current.rotation.y += delta / 16;
+    if (cloudRef.current) cloudRef.current.rotation.y += delta / 10;
   });
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx("color", { attach: "background", args: ["#04142e"] }),
-    /* @__PURE__ */ jsx("ambientLight", { intensity: 0.92 }),
-    /* @__PURE__ */ jsx("hemisphereLight", { args: ["#e2f3ff", "#1e3a8a", 0.56] }),
-    /* @__PURE__ */ jsx("directionalLight", { position: [3.6, 2.4, 3.2], intensity: 1.38, color: "#ffffff" }),
-    /* @__PURE__ */ jsx("pointLight", { position: [-2.6, -1.1, -3.4], intensity: 0.28, color: "#38bdf8" }),
-    /* @__PURE__ */ jsx(Stars, { radius: 80, depth: 35, count: 2500, factor: 3, saturation: 0, fade: true, speed: 0.3 }),
-    /* @__PURE__ */ jsxs("group", { ref: globeRef, children: [
-      /* @__PURE__ */ jsxs("mesh", { children: [
-        /* @__PURE__ */ jsx("sphereGeometry", { args: [1, 64, 64] }),
-        /* @__PURE__ */ jsx(
-          "meshPhongMaterial",
-          {
-            map: earthMap,
-            normalMap: earthNormalMap,
-            specularMap: earthSpecularMap,
-            specular: "#dbeafe",
-            shininess: 22,
-            emissive: "#102743",
-            emissiveIntensity: 0.15
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxs("mesh", { ref: cloudRef, children: [
-        /* @__PURE__ */ jsx("sphereGeometry", { args: [1.018, 64, 64] }),
-        /* @__PURE__ */ jsx("meshPhongMaterial", { map: cloudMap, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide })
-      ] }),
-      continents.map((continent) => {
-        const normalizedName = normalizeContinentName(continent);
-        if (!continentHotspots[normalizedName]) {
-          return null;
-        }
-        return /* @__PURE__ */ jsx(
-          ContinentHotspot,
-          {
-            continent,
-            selectedContinent,
-            onSelect
-          },
-          continent
-        );
-      })
-    ] }),
-    /* @__PURE__ */ jsx(
-      OrbitControls,
-      {
-        enablePan: false,
-        minDistance: 2,
-        maxDistance: 3.6,
-        autoRotate: false
-      }
-    )
-  ] });
+
+  return (
+    <Fragment>
+      <color attach="background" args={["#04142e"]} />
+      <ambientLight intensity={0.92} />
+      <hemisphereLight args={["#e2f3ff", "#1e3a8a", 0.56]} />
+      <directionalLight position={[3.6, 2.4, 3.2]} intensity={1.38} color="#ffffff" />
+      <pointLight position={[-2.6, -1.1, -3.4]} intensity={0.28} color="#38bdf8" />
+      <Stars radius={80} depth={35} count={2500} factor={3} saturation={0} fade speed={0.3} />
+      <group ref={globeRef}>
+        <mesh>
+          <sphereGeometry args={[1, 64, 64]} />
+          <meshPhongMaterial
+            map={earthMap}
+            normalMap={earthNormalMap}
+            specularMap={earthSpecularMap}
+            specular="#dbeafe"
+            shininess={22}
+            emissive="#102743"
+            emissiveIntensity={0.15}
+          />
+        </mesh>
+        <mesh ref={cloudRef}>
+          <sphereGeometry args={[1.018, 64, 64]} />
+          <meshPhongMaterial map={cloudMap} transparent opacity={0.25} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+        {continents.map((continent) => {
+          const normalizedName = normalizeContinentName(continent);
+          if (!continentHotspots[normalizedName]) return null;
+          return (
+            <ContinentHotspot
+              key={continent}
+              continent={continent}
+              selectedContinent={selectedContinent}
+              onSelect={onSelect}
+            />
+          );
+        })}
+      </group>
+      <OrbitControls enablePan={false} minDistance={2} maxDistance={3.6} autoRotate={false} />
+    </Fragment>
+  );
 };
+
 const ContinentShape = ({ selectedContinent }) => {
   const normalizedName = normalizeContinentName(selectedContinent);
   const color = getContinentColor(selectedContinent);
   const shapePath = continentShapes[normalizedName] || continentShapes["Europe"];
-  return /* @__PURE__ */ jsxs("div", { className: "continent-shape-card", children: [
-    /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 220 130", className: "continent-shape-svg", "aria-label": `${normalizedName} map`, children: [
-      /* @__PURE__ */ jsx("title", { children: `${normalizedName} map` }),
-      /* @__PURE__ */ jsx("defs", { children: /* @__PURE__ */ jsxs("linearGradient", { id: "continentGradient", x1: "0%", y1: "0%", x2: "100%", y2: "100%", children: [
-        /* @__PURE__ */ jsx("stop", { offset: "0%", stopColor: color, stopOpacity: "0.9" }),
-        /* @__PURE__ */ jsx("stop", { offset: "100%", stopColor: "#0f172a", stopOpacity: "0.85" })
-      ] }) }),
-      /* @__PURE__ */ jsx("rect", { x: "0", y: "0", width: "220", height: "130", rx: "14", fill: "#020617" }),
-      /* @__PURE__ */ jsx("path", { d: shapePath, fill: "url(#continentGradient)", stroke: color, strokeWidth: "2" })
-    ] }),
-    /* @__PURE__ */ jsx("p", { className: "continent-shape-caption", children: normalizedName })
-  ] });
+  return (
+    <div className="continent-shape-card">
+      <svg viewBox="0 0 220 130" className="continent-shape-svg" aria-label={`${normalizedName} map`}>
+        <title>{normalizedName} map</title>
+        <defs>
+          <linearGradient id="continentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.85" />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="220" height="130" rx="14" fill="#020617" />
+        <path d={shapePath} fill="url(#continentGradient)" stroke={color} strokeWidth="2" />
+      </svg>
+      <p className="continent-shape-caption">{normalizedName}</p>
+    </div>
+  );
 };
+
 const mergeCountries = (primary, fallback) => {
-  const deduped = /* @__PURE__ */ new Map();
-  [...fallback, ...primary].forEach((country) => {
-    deduped.set(country.code, country);
-  });
+  const deduped = new Map();
+  [...fallback, ...primary].forEach((c) => deduped.set(c.code, c));
   return Array.from(deduped.values());
 };
-const sortCountriesByName = (countriesToSort) => {
-  return [...countriesToSort].sort((left, right) => left.name.localeCompare(right.name));
-};
-const getFallbackIdFromCode = (code) => {
-  return code.toUpperCase().split("").reduce((sum, letter) => sum + letter.charCodeAt(0), 1e3);
-};
+const sortCountriesByName = (arr) => [...arr].sort((a, b) => a.name.localeCompare(b.name));
+const getFallbackIdFromCode = (code) =>
+  code.toUpperCase().split("").reduce((sum, l) => sum + l.charCodeAt(0), 1000);
+
 const mapRegionToContinent = (region, subregion) => {
-  const normalizedRegion = (region || "").trim();
-  const normalizedSubregion = (subregion || "").trim();
-  if (normalizedRegion === "Asia" || normalizedRegion === "Europe" || normalizedRegion === "Africa" || normalizedRegion === "Oceania") {
-    return normalizedRegion;
-  }
-  if (normalizedRegion === "Americas") {
-    if (normalizedSubregion.toLowerCase().includes("south america")) {
-      return "South America";
-    }
-    return "North America";
-  }
+  const r = (region || "").trim();
+  const s = (subregion || "").trim();
+  if (["Asia", "Europe", "Africa", "Oceania"].includes(r)) return r;
+  if (r === "Americas") return s.toLowerCase().includes("south") ? "South America" : "North America";
   return null;
 };
-const buildCountryDescriptionFromCapital = (countryName, capital) => {
-  const primaryCapital = capital && capital.length > 0 ? capital[0] : "";
-  if (!primaryCapital) {
-    return `Distinct culinary traditions from ${countryName}`;
-  }
-  return `Signature flavors from ${countryName} (${primaryCapital})`;
-};
+
 const mapRestCountryToCountry = (entry) => {
   const code = (entry.cca2 || "").trim().toUpperCase();
-  if (code.length !== 2) {
-    return null;
-  }
+  if (code.length !== 2) return null;
   const continent = mapRegionToContinent(entry.region, entry.subregion);
-  if (!continent) {
-    return null;
-  }
-  const shouldInclude = entry.independent === true || entry.unMember === true;
-  if (!shouldInclude) {
-    return null;
-  }
+  if (!continent) return null;
+  if (!(entry.independent === true || entry.unMember === true)) return null;
   const name = (entry.name?.common || "").trim();
-  if (!name) {
-    return null;
-  }
+  if (!name) return null;
+  const capital = entry.capital?.[0] || "";
   return {
     id: getFallbackIdFromCode(code),
     name,
     code,
     continent,
-    flagEmoji: entry.flag || "\u{1F3F3}\uFE0F",
-    latitude: Array.isArray(entry.latlng) && entry.latlng.length > 0 ? Number(entry.latlng[0]) : 0,
-    longitude: Array.isArray(entry.latlng) && entry.latlng.length > 1 ? Number(entry.latlng[1]) : 0,
-    description: buildCountryDescriptionFromCapital(name, entry.capital)
+    flagEmoji: entry.flag || "🏳️",
+    latitude: Array.isArray(entry.latlng) ? Number(entry.latlng[0]) : 0,
+    longitude: Array.isArray(entry.latlng) ? Number(entry.latlng[1]) : 0,
+    description: capital ? `Signature flavors from ${name} (${capital})` : `Distinct culinary traditions from ${name}`
   };
 };
+
 const buildRestCountriesByContinent = (restCountries) => {
   const grouped = {};
-  continentOrder.forEach((continent) => {
-    grouped[continent] = [];
-  });
+  continentOrder.forEach((c) => { grouped[c] = []; });
   restCountries.forEach((entry) => {
     const mapped = mapRestCountryToCountry(entry);
-    if (!mapped) {
-      return;
-    }
+    if (!mapped) return;
     grouped[mapped.continent] = grouped[mapped.continent] || [];
     grouped[mapped.continent].push(mapped);
   });
-  continentOrder.forEach((continent) => {
-    grouped[continent] = sortCountriesByName(mergeCountries(grouped[continent] || [], []));
-  });
+  continentOrder.forEach((c) => { grouped[c] = sortCountriesByName(mergeCountries(grouped[c] || [], [])); });
   return grouped;
 };
+
 const fetchRestCountries = async () => {
   const response = await fetch(restCountriesApiUrl);
-  if (!response.ok) {
-    throw new Error(`REST Countries request failed: ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`REST Countries failed: ${response.status}`);
   const payload = await response.json();
   return buildRestCountriesByContinent(payload || []);
 };
-const buildContinentsData = (fetchedData, restData = {}) => {
-  const baseData = {};
-  continentOrder.forEach((continent) => {
-    const mockData = [...mockContinents[continent] || []];
-    const restCountries = restData[continent] || [];
-    baseData[continent] = mergeCountries(restCountries, mockData);
-  });
-  Object.entries(fetchedData).forEach(([continentKey, fetchedCountries]) => {
-    const normalizedContinent = normalizeContinentName(continentKey);
-    const fallbackCountries = baseData[normalizedContinent] || [];
-    baseData[normalizedContinent] = mergeCountries(fetchedCountries || [], fallbackCountries);
-  });
-  continentOrder.forEach((continent) => {
-    baseData[continent] = sortCountriesByName(baseData[continent] || []);
-  });
-  return baseData;
-};
+
 const mockContinents = {
   "Asia": [
-    { id: 1, name: "Japan", code: "JP", continent: "Asia", flagEmoji: "\u{1F1EF}\u{1F1F5}", latitude: 36.2048, longitude: 138.2529, description: "Island nation with unique cuisine" },
-    { id: 2, name: "Thailand", code: "TH", continent: "Asia", flagEmoji: "\u{1F1F9}\u{1F1ED}", latitude: 15.87, longitude: 100.9925, description: "Southeast Asian spice hub" },
-    { id: 3, name: "India", code: "IN", continent: "Asia", flagEmoji: "\u{1F1EE}\u{1F1F3}", latitude: 20.5937, longitude: 78.9629, description: "Land of diverse spices" },
-    { id: 4, name: "South Korea", code: "KR", continent: "Asia", flagEmoji: "\u{1F1F0}\u{1F1F7}", latitude: 35.9078, longitude: 127.7669, description: "Vibrant modern cuisine" },
-    { id: 5, name: "Vietnam", code: "VN", continent: "Asia", flagEmoji: "\u{1F1FB}\u{1F1F3}", latitude: 14.0583, longitude: 108.2772, description: "Fresh and balanced flavors" }
+    { id: 1, name: "Japan", code: "JP", continent: "Asia", flagEmoji: "🇯🇵", latitude: 36.2048, longitude: 138.2529, description: "Island nation with unique cuisine" },
+    { id: 2, name: "Thailand", code: "TH", continent: "Asia", flagEmoji: "🇹🇭", latitude: 15.87, longitude: 100.9925, description: "Southeast Asian spice hub" },
+    { id: 3, name: "India", code: "IN", continent: "Asia", flagEmoji: "🇮🇳", latitude: 20.5937, longitude: 78.9629, description: "Land of diverse spices" },
+    { id: 4, name: "South Korea", code: "KR", continent: "Asia", flagEmoji: "🇰🇷", latitude: 35.9078, longitude: 127.7669, description: "Vibrant modern cuisine" },
+    { id: 5, name: "Vietnam", code: "VN", continent: "Asia", flagEmoji: "🇻🇳", latitude: 14.0583, longitude: 108.2772, description: "Fresh and balanced flavors" },
+    { id: 30, name: "Turkey", code: "TR", continent: "Asia", flagEmoji: "🇹🇷", latitude: 38.9637, longitude: 35.2433, description: "Bridge between East and West" },
+    { id: 31, name: "Indonesia", code: "ID", continent: "Asia", flagEmoji: "🇮🇩", latitude: -0.7893, longitude: 113.9213, description: "Archipelago of bold flavors" },
+    { id: 32, name: "Philippines", code: "PH", continent: "Asia", flagEmoji: "🇵🇭", latitude: 12.8797, longitude: 121.774, description: "Tropical Southeast Asian cuisine" },
+    { id: 33, name: "Lebanon", code: "LB", continent: "Asia", flagEmoji: "🇱🇧", latitude: 33.8547, longitude: 35.8623, description: "Heart of Middle Eastern cooking" },
+    { id: 34, name: "China", code: "CN", continent: "Asia", flagEmoji: "🇨🇳", latitude: 35.8617, longitude: 104.1954, description: "Ancient and diverse culinary traditions" }
   ],
   "Europe": [
-    { id: 6, name: "France", code: "FR", continent: "Europe", flagEmoji: "\u{1F1EB}\u{1F1F7}", latitude: 46.2276, longitude: 2.2137, description: "Culinary capital of the world" },
-    { id: 7, name: "Italy", code: "IT", continent: "Europe", flagEmoji: "\u{1F1EE}\u{1F1F9}", latitude: 41.8719, longitude: 12.5674, description: "Pasta and pizza paradise" },
-    { id: 8, name: "Spain", code: "ES", continent: "Europe", flagEmoji: "\u{1F1EA}\u{1F1F8}", latitude: 40.4637, longitude: -3.7492, description: "Mediterranean flavors" },
-    { id: 9, name: "Greece", code: "GR", continent: "Europe", flagEmoji: "\u{1F1EC}\u{1F1F7}", latitude: 39.0742, longitude: 21.8243, description: "Ancient Mediterranean tradition" },
-    { id: 10, name: "Germany", code: "DE", continent: "Europe", flagEmoji: "\u{1F1E9}\u{1F1EA}", latitude: 51.1657, longitude: 10.4515, description: "Hearty and rich flavors" }
+    { id: 6, name: "France", code: "FR", continent: "Europe", flagEmoji: "🇫🇷", latitude: 46.2276, longitude: 2.2137, description: "Culinary capital of the world" },
+    { id: 7, name: "Italy", code: "IT", continent: "Europe", flagEmoji: "🇮🇹", latitude: 41.8719, longitude: 12.5674, description: "Pasta and pizza paradise" },
+    { id: 8, name: "Spain", code: "ES", continent: "Europe", flagEmoji: "🇪🇸", latitude: 40.4637, longitude: -3.7492, description: "Mediterranean flavors" },
+    { id: 9, name: "Greece", code: "GR", continent: "Europe", flagEmoji: "🇬🇷", latitude: 39.0742, longitude: 21.8243, description: "Ancient Mediterranean tradition" },
+    { id: 10, name: "Germany", code: "DE", continent: "Europe", flagEmoji: "🇩🇪", latitude: 51.1657, longitude: 10.4515, description: "Hearty and rich flavors" },
+    { id: 35, name: "Sweden", code: "SE", continent: "Europe", flagEmoji: "🇸🇪", latitude: 60.1282, longitude: 18.6435, description: "Nordic culinary heritage" },
+    { id: 36, name: "Portugal", code: "PT", continent: "Europe", flagEmoji: "🇵🇹", latitude: 39.3999, longitude: -8.2245, description: "Seafood and pastry traditions" }
   ],
   "Africa": [
-    { id: 11, name: "Egypt", code: "EG", continent: "Africa", flagEmoji: "\u{1F1EA}\u{1F1EC}", latitude: 26.8206, longitude: 30.8025, description: "Ancient culinary traditions" },
-    { id: 12, name: "Morocco", code: "MA", continent: "Africa", flagEmoji: "\u{1F1F2}\u{1F1E6}", latitude: 31.7917, longitude: -7.0926, description: "Spiced tagines and couscous" },
-    { id: 13, name: "South Africa", code: "ZA", continent: "Africa", flagEmoji: "\u{1F1FF}\u{1F1E6}", latitude: -30.5595, longitude: 22.9375, description: "Fusion of cultures" },
-    { id: 14, name: "Ethiopia", code: "ET", continent: "Africa", flagEmoji: "\u{1F1EA}\u{1F1F9}", latitude: 9.145, longitude: 40.4897, description: "Unique spice blends" }
+    { id: 11, name: "Egypt", code: "EG", continent: "Africa", flagEmoji: "🇪🇬", latitude: 26.8206, longitude: 30.8025, description: "Ancient culinary traditions" },
+    { id: 12, name: "Morocco", code: "MA", continent: "Africa", flagEmoji: "🇲🇦", latitude: 31.7917, longitude: -7.0926, description: "Spiced tagines and couscous" },
+    { id: 13, name: "South Africa", code: "ZA", continent: "Africa", flagEmoji: "🇿🇦", latitude: -30.5595, longitude: 22.9375, description: "Fusion of cultures" },
+    { id: 14, name: "Ethiopia", code: "ET", continent: "Africa", flagEmoji: "🇪🇹", latitude: 9.145, longitude: 40.4897, description: "Unique spice blends" },
+    { id: 37, name: "Nigeria", code: "NG", continent: "Africa", flagEmoji: "🇳🇬", latitude: 9.082, longitude: 8.6753, description: "West African bold flavors" }
   ],
   "North America": [
-    { id: 15, name: "Mexico", code: "MX", continent: "North America", flagEmoji: "\u{1F1F2}\u{1F1FD}", latitude: 23.6345, longitude: -102.5528, description: "Vibrant and complex flavors" },
-    { id: 16, name: "United States", code: "US", continent: "North America", flagEmoji: "\u{1F1FA}\u{1F1F8}", latitude: 37.0902, longitude: -95.7129, description: "Diverse regional cuisines" },
-    { id: 17, name: "Canada", code: "CA", continent: "North America", flagEmoji: "\u{1F1E8}\u{1F1E6}", latitude: 56.1304, longitude: -106.3468, description: "Fresh and local ingredients" }
+    { id: 15, name: "Mexico", code: "MX", continent: "North America", flagEmoji: "🇲🇽", latitude: 23.6345, longitude: -102.5528, description: "Vibrant and complex flavors" },
+    { id: 16, name: "United States", code: "US", continent: "North America", flagEmoji: "🇺🇸", latitude: 37.0902, longitude: -95.7129, description: "Diverse regional cuisines" },
+    { id: 17, name: "Canada", code: "CA", continent: "North America", flagEmoji: "🇨🇦", latitude: 56.1304, longitude: -106.3468, description: "Fresh and local ingredients" },
+    { id: 38, name: "Jamaica", code: "JM", continent: "North America", flagEmoji: "🇯🇲", latitude: 18.1096, longitude: -77.2975, description: "Caribbean island spices" }
   ],
   "South America": [
-    { id: 18, name: "Peru", code: "PE", continent: "South America", flagEmoji: "\u{1F1F5}\u{1F1EA}", latitude: -9.19, longitude: -75.0152, description: "Ancient Andean cuisine" },
-    { id: 19, name: "Brazil", code: "BR", continent: "South America", flagEmoji: "\u{1F1E7}\u{1F1F7}", latitude: -14.235, longitude: -51.9253, description: "Tropical and bold flavors" },
-    { id: 20, name: "Argentina", code: "AR", continent: "South America", flagEmoji: "\u{1F1E6}\u{1F1F7}", latitude: -38.4161, longitude: -63.6167, description: "Grilled meats and wine culture" },
-    { id: 21, name: "Colombia", code: "CO", continent: "South America", flagEmoji: "\u{1F1E8}\u{1F1F4}", latitude: 4.5709, longitude: -74.2973, description: "Rich coffee and tropical fruits" }
+    { id: 18, name: "Peru", code: "PE", continent: "South America", flagEmoji: "🇵🇪", latitude: -9.19, longitude: -75.0152, description: "Ancient Andean cuisine" },
+    { id: 19, name: "Brazil", code: "BR", continent: "South America", flagEmoji: "🇧🇷", latitude: -14.235, longitude: -51.9253, description: "Tropical and bold flavors" },
+    { id: 20, name: "Argentina", code: "AR", continent: "South America", flagEmoji: "🇦🇷", latitude: -38.4161, longitude: -63.6167, description: "Grilled meats and wine culture" },
+    { id: 21, name: "Colombia", code: "CO", continent: "South America", flagEmoji: "🇨🇴", latitude: 4.5709, longitude: -74.2973, description: "Rich coffee and tropical fruits" }
   ],
   "Oceania": [
-    { id: 22, name: "Australia", code: "AU", continent: "Oceania", flagEmoji: "\u{1F1E6}\u{1F1FA}", latitude: -25.2744, longitude: 133.7751, description: "Modern and indigenous fusion" },
-    { id: 23, name: "New Zealand", code: "NZ", continent: "Oceania", flagEmoji: "\u{1F1F3}\u{1F1FF}", latitude: -40.9006, longitude: 174.886, description: "Pacific seafood and meats" }
+    { id: 22, name: "Australia", code: "AU", continent: "Oceania", flagEmoji: "🇦🇺", latitude: -25.2744, longitude: 133.7751, description: "Modern and indigenous fusion" },
+    { id: 23, name: "New Zealand", code: "NZ", continent: "Oceania", flagEmoji: "🇳🇿", latitude: -40.9006, longitude: 174.886, description: "Pacific seafood and meats" }
   ]
 };
+
+const buildContinentsData = (fetchedData, restData = {}) => {
+  const baseData = {};
+  continentOrder.forEach((c) => {
+    const mockData = [...(mockContinents[c] || [])];
+    const restCountries = restData[c] || [];
+    baseData[c] = mergeCountries(restCountries, mockData);
+  });
+  Object.entries(fetchedData).forEach(([key, fetchedCountries]) => {
+    const cont = normalizeContinentName(key);
+    const fallback = baseData[cont] || [];
+    baseData[cont] = mergeCountries(fetchedCountries || [], fallback);
+  });
+  continentOrder.forEach((c) => { baseData[c] = sortCountriesByName(baseData[c] || []); });
+  return baseData;
+};
+
 const FlavorMapPage = () => {
   const [countries, setCountries] = useState([]);
   const [continents, setContinents] = useState({});
@@ -355,13 +334,14 @@ const FlavorMapPage = () => {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recipesLoading, setRecipesLoading] = useState(false);
   const [countriesPage, setCountriesPage] = useState(0);
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
   const navigate = useNavigate();
-  useEffect(() => {
-    loadCountries();
-  }, []);
+
+  useEffect(() => { loadCountries(); }, []);
+
   const loadCountries = async () => {
     try {
       const [backendResponse, restResponse] = await Promise.allSettled([
@@ -370,25 +350,20 @@ const FlavorMapPage = () => {
       ]);
       const backendData = backendResponse.status === "fulfilled" ? backendResponse.value.data || {} : {};
       const restData = restResponse.status === "fulfilled" ? restResponse.value : {};
-      if (restResponse.status === "rejected") {
-        console.warn("REST Countries failed, using backend/mock fallback:", restResponse.reason);
-      }
       const mergedContinents = buildContinentsData(backendData, restData);
       setContinents(mergedContinents);
-      const allCountries = Object.values(mergedContinents).flat();
-      setCountries(allCountries);
-      setSelectedContinent((current) => current || defaultContinent);
-    } catch (error) {
-      console.error("Failed to load countries, using mock data:", error);
-      const fallbackContinents = buildContinentsData({});
-      setContinents(fallbackContinents);
-      const allCountries = Object.values(fallbackContinents).flat();
-      setCountries(allCountries);
-      setSelectedContinent((current) => current || defaultContinent);
+      setCountries(Object.values(mergedContinents).flat());
+      setSelectedContinent((cur) => cur || defaultContinent);
+    } catch {
+      const fallback = buildContinentsData({});
+      setContinents(fallback);
+      setCountries(Object.values(fallback).flat());
+      setSelectedContinent((cur) => cur || defaultContinent);
     } finally {
       setLoading(false);
     }
   };
+
   const handleContinentClick = (continent) => {
     setSelectedContinent(continent);
     setSelectedCountry(null);
@@ -397,329 +372,295 @@ const FlavorMapPage = () => {
     setShowAllCountries(false);
     setCountrySearch("");
   };
+
   const handleCountryClick = async (country) => {
     setSelectedCountry(country);
-    setLoading(true);
+    setRecipesLoading(true);
+    setRecipes([]);
     try {
       const response = await recipeApi.getByCountryCode(country.code);
-      setRecipes(response.data);
-    } catch (error) {
-      console.error("Failed to load recipes, using mock data:", error);
-      const mockRecipes = [
-        {
-          id: 1,
-          name: `${country.name} Classic Dish`,
-          description: `Traditional recipe from ${country.name}`,
-          country,
-          categories: [],
-          prepTimeMinutes: 15,
-          cookTimeMinutes: 30,
-          totalTimeMinutes: 45,
-          defaultServings: 4,
-          difficultyLevel: "Medium",
-          culturalContext: `A beloved dish from ${country.name}`,
-          ingredients: [],
-          steps: []
-        },
-        {
-          id: 2,
-          name: `Modern ${country.name} Fusion`,
-          description: `Contemporary take on ${country.name} flavors`,
-          country,
-          categories: [],
-          prepTimeMinutes: 20,
-          cookTimeMinutes: 40,
-          totalTimeMinutes: 60,
-          defaultServings: 4,
-          difficultyLevel: "Hard",
-          culturalContext: `A modern interpretation of ${country.name} cuisine`,
-          ingredients: [],
-          steps: []
-        }
-      ];
-      setRecipes(mockRecipes);
+      setRecipes(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      // Fallback: match ALL_RECIPES by country name (case-insensitive)
+      const local = ALL_RECIPES.filter(
+        (r) => r.country.toLowerCase() === country.name.toLowerCase()
+      ).map(toFlavorMapRecipe);
+      setRecipes(local);
     } finally {
-      setLoading(false);
+      setRecipesLoading(false);
     }
   };
-  const handleRecipeClick = (recipeId) => {
-    navigate(`/recipe/${recipeId}`);
+
+  const handleRecipeClick = (recipe) => {
+    // Pass recipe data via router state so RecipeDetailPage can use it without backend
+    navigate(`/recipe/${recipe.id}`, { state: { localRecipe: recipe._raw || null } });
   };
-  const availableContinents = continentOrder.filter((continent) => continents[continent]);
+
+  const availableContinents = continentOrder.filter((c) => continents[c]);
+
   const displayedCountries = useMemo(() => {
-    const sourceCountries = selectedContinent ? continents[selectedContinent] || [] : countries;
-    return sortCountriesByName(sourceCountries);
+    const src = selectedContinent ? continents[selectedContinent] || [] : countries;
+    return sortCountriesByName(src);
   }, [selectedContinent, continents, countries]);
+
   const searchFilteredCountries = useMemo(() => {
-    const query = countrySearch.trim().toLowerCase();
-    if (!query) return displayedCountries;
-    return displayedCountries.filter((c) => c.name.toLowerCase().includes(query));
+    const q = countrySearch.trim().toLowerCase();
+    return q ? displayedCountries.filter((c) => c.name.toLowerCase().includes(q)) : displayedCountries;
   }, [displayedCountries, countrySearch]);
+
   const visibleCountries = useMemo(() => {
-    if (showAllCountries) {
-      return searchFilteredCountries;
-    }
+    if (showAllCountries) return searchFilteredCountries;
     const start = countriesPage * countriesPageSize;
     return searchFilteredCountries.slice(start, start + countriesPageSize);
   }, [searchFilteredCountries, showAllCountries, countriesPage]);
+
   const totalCountriesInView = searchFilteredCountries.length;
   const totalPages = Math.max(1, Math.ceil(totalCountriesInView / countriesPageSize));
   const hasCountryPagination = totalCountriesInView > countriesPageSize;
+
   useEffect(() => {
-    if (countriesPage > totalPages - 1) {
-      setCountriesPage(0);
-    }
+    if (countriesPage > totalPages - 1) setCountriesPage(0);
   }, [countriesPage, totalPages]);
-  return /* @__PURE__ */ jsx("div", { className: "flavor-map-page page", children: /* @__PURE__ */ jsxs("div", { className: "container", children: [
-    /* @__PURE__ */ jsx(
-      motion.h1,
-      {
-        initial: { opacity: 0, y: -20 },
-        animate: { opacity: 1, y: 0 },
-        className: "page-title",
-        children: "\u{1F30D} Global Flavor Map"
-      }
-    ),
-    /* @__PURE__ */ jsxs("div", { className: "flavor-map-layout", children: [
-      /* @__PURE__ */ jsxs("div", { className: "globe-section", children: [
-        /* @__PURE__ */ jsxs("div", { className: "globe-card", children: [
-          /* @__PURE__ */ jsxs("div", { className: "map-header", children: [
-            /* @__PURE__ */ jsx("h2", { children: "3D Flavor Globe" }),
-            /* @__PURE__ */ jsx("p", { children: "Rotate and click a continent hotspot to explore countries and cuisines" })
-          ] }),
-          /* @__PURE__ */ jsx("div", { className: "globe-canvas-wrapper", children: /* @__PURE__ */ jsx(Canvas, { camera: { position: [0, 0.2, 2.65], fov: 45 }, children: /* @__PURE__ */ jsx(
-            GlobeScene,
-            {
-              continents: availableContinents,
-              selectedContinent,
-              onSelect: handleContinentClick
-            }
-          ) }) }),
-          /* @__PURE__ */ jsx("div", { className: "continent-picker", "aria-label": "Choose continent", children: availableContinents.map((continent) => {
-            const isSelected = selectedContinent === continent;
-            const countryCount = (continents[continent] || []).length;
-            return /* @__PURE__ */ jsxs(
-              "button",
-              {
-                className: `continent-picker-btn ${isSelected ? "active" : ""}`,
-                style: { borderColor: getContinentColor(continent) },
-                onClick: () => handleContinentClick(continent),
-                children: [
-                  /* @__PURE__ */ jsx(
-                    "span",
-                    {
-                      className: "continent-picker-dot",
-                      style: { backgroundColor: getContinentColor(continent) }
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", { className: "continent-picker-name", children: continent }),
-                  /* @__PURE__ */ jsx("span", { className: "continent-picker-count", children: countryCount })
-                ]
-              },
-              continent
-            );
-          }) }),
-          /* @__PURE__ */ jsxs("div", { className: "map-footer", children: [
-            /* @__PURE__ */ jsxs("p", { children: [
-              "\u{1F4CD} Total Countries: ",
-              countries.length
-            ] }),
-            /* @__PURE__ */ jsx("p", { children: "\u{1F37D}\uFE0F Click any continent label around the globe to start exploring" })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "continent-selected-panel", children: [
-          /* @__PURE__ */ jsx("h3", { children: "Continent Selected" }),
-          selectedContinent ? /* @__PURE__ */ jsxs(Fragment, { children: [
-            /* @__PURE__ */ jsx(ContinentShape, { selectedContinent }),
-            /* @__PURE__ */ jsxs("div", { className: "continent-meta", children: [
-              /* @__PURE__ */ jsx(
-                "span",
-                {
-                  className: "continent-chip",
-                  style: { backgroundColor: getContinentColor(selectedContinent) },
-                  children: normalizeContinentName(selectedContinent)
-                }
-              ),
-              /* @__PURE__ */ jsxs("span", { className: "continent-country-count", children: [
-                (continents[selectedContinent] || []).length,
-                " countries available"
-              ] })
-            ] })
-          ] }) : /* @__PURE__ */ jsx("p", { className: "continent-empty", children: "Select a continent on the globe to preview it here." })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs("div", { className: "selection-section", children: [
-        /* @__PURE__ */ jsxs("div", { className: "country-finder-bar", children: [
-          /* @__PURE__ */ jsxs("div", { className: "country-finder-header", children: [
-            /* @__PURE__ */ jsxs("div", { className: "country-finder-title-row", children: [
-              /* @__PURE__ */ jsx(FaSearch, { className: "country-finder-icon" }),
-              /* @__PURE__ */ jsx("h3", { className: "country-finder-title", children: "Country Recipe Finder" })
-            ] }),
-            /* @__PURE__ */ jsxs("p", { className: "country-finder-subtitle", children: [
-              "Search within",
-              " ",
-              /* @__PURE__ */ jsx("span", { className: "country-finder-continent", children: selectedContinent ? normalizeContinentName(selectedContinent) : "all continents" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "country-finder-input-wrap", children: [
-            /* @__PURE__ */ jsx(FaSearch, { className: "country-finder-input-icon" }),
-            /* @__PURE__ */ jsx(
-              "input",
-              {
-                type: "text",
-                className: "country-finder-input",
-                placeholder: "e.g. Japan, Brazil, Nigeria\u2026",
-                value: countrySearch,
-                onChange: (e) => {
-                  setCountrySearch(e.target.value);
-                  setCountriesPage(0);
-                }
-              }
-            ),
-            countrySearch && /* @__PURE__ */ jsx(
-              "button",
-              {
-                type: "button",
-                className: "country-finder-clear",
-                "aria-label": "Clear search",
-                onClick: () => {
-                  setCountrySearch("");
-                  setCountriesPage(0);
-                },
-                children: /* @__PURE__ */ jsx(FaTimes, {})
-              }
-            )
-          ] }),
-          countrySearch.trim() && /* @__PURE__ */ jsx("p", { className: "country-finder-results", children: totalCountriesInView === 0 ? `No countries match "${countrySearch.trim()}"` : `${totalCountriesInView} result${totalCountriesInView !== 1 ? "s" : ""} for "${countrySearch.trim()}"` })
-        ] }),
-        displayedCountries.length > 0 && /* @__PURE__ */ jsxs("div", { className: "countries-section", children: [
-          /* @__PURE__ */ jsxs("h3", { children: [
-            selectedContinent ? `Countries in ${normalizeContinentName(selectedContinent)}` : "All Countries",
-            /* @__PURE__ */ jsx("span", { className: "count-badge", children: totalCountriesInView })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "countries-toolbar", children: [
-            /* @__PURE__ */ jsxs("p", { className: "countries-view-state", children: [
-              "Showing ",
-              visibleCountries.length,
-              " of ",
-              totalCountriesInView,
-              " countries"
-            ] }),
-            hasCountryPagination && /* @__PURE__ */ jsxs("div", { className: "countries-pagination-controls", children: [
-              !showAllCountries && /* @__PURE__ */ jsxs(Fragment, { children: [
-                /* @__PURE__ */ jsxs("span", { className: "countries-page-indicator", children: [
-                  countriesPage + 1,
-                  " / ",
-                  totalPages
-                ] }),
-                /* @__PURE__ */ jsx(
-                  "button",
-                  {
-                    type: "button",
-                    className: "country-nav-btn",
-                    onClick: () => setCountriesPage((current) => Math.max(0, current - 1)),
-                    disabled: countriesPage === 0,
-                    "aria-label": "Previous countries",
-                    children: /* @__PURE__ */ jsx(FaChevronLeft, {})
-                  }
-                ),
-                /* @__PURE__ */ jsx(
-                  "button",
-                  {
-                    type: "button",
-                    className: "country-nav-btn",
-                    onClick: () => setCountriesPage((current) => Math.min(totalPages - 1, current + 1)),
-                    disabled: countriesPage >= totalPages - 1,
-                    "aria-label": "Next countries",
-                    children: /* @__PURE__ */ jsx(FaChevronRight, {})
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsx(
-                "button",
-                {
-                  type: "button",
-                  className: "country-see-all-btn",
-                  onClick: () => {
-                    setShowAllCountries((current) => !current);
-                    setCountriesPage(0);
-                  },
-                  children: showAllCountries ? "Show by Page" : "See All"
-                }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ jsx("div", { className: "countries-grid", children: visibleCountries.map((country) => /* @__PURE__ */ jsxs(
-            motion.div,
-            {
-              whileHover: { scale: 1.05 },
-              whileTap: { scale: 0.95 },
-              className: `country-card ${selectedCountry?.id === country.id ? "selected" : ""}`,
-              onClick: () => handleCountryClick(country),
-              children: [
-                /* @__PURE__ */ jsx("div", { className: "country-flag-wrap", children: /* @__PURE__ */ jsx(
-                  ReactCountryFlag,
-                  {
-                    countryCode: country.code,
-                    svg: true,
-                    className: "country-flag-svg",
-                    title: country.name
-                  }
-                ) }),
-                /* @__PURE__ */ jsx("h4", { children: country.name }),
-                country.description && /* @__PURE__ */ jsx("p", { className: "country-desc", children: country.description }),
-                /* @__PURE__ */ jsx("span", { className: "click-hint", children: "Click to view recipes \u2192" })
-              ]
-            },
-            country.code
-          )) })
-        ] }),
-        selectedCountry && /* @__PURE__ */ jsxs("div", { className: "recipes-section", children: [
-          /* @__PURE__ */ jsxs("h3", { children: [
-            "\u{1F373} Recipes from ",
-            selectedCountry.name,
-            " ",
-            selectedCountry.flagEmoji
-          ] }),
-          loading ? /* @__PURE__ */ jsxs("div", { className: "loading", children: [
-            /* @__PURE__ */ jsx("div", { className: "spinner" }),
-            /* @__PURE__ */ jsx("p", { children: "Loading recipes..." })
-          ] }) : recipes.length > 0 ? /* @__PURE__ */ jsx("div", { className: "recipes-grid", children: recipes.map((recipe) => /* @__PURE__ */ jsxs(
-            motion.div,
-            {
-              whileHover: { scale: 1.05 },
-              whileTap: { scale: 0.95 },
-              className: "recipe-card-mini card",
-              onClick: () => handleRecipeClick(recipe.id),
-              children: [
-                /* @__PURE__ */ jsx("h4", { children: recipe.name }),
-                /* @__PURE__ */ jsx("p", { children: recipe.description }),
-                /* @__PURE__ */ jsxs("div", { className: "recipe-quick-info", children: [
-                  /* @__PURE__ */ jsxs("span", { children: [
-                    "\u23F1\uFE0F ",
-                    recipe.totalTimeMinutes,
-                    " min"
-                  ] }),
-                  /* @__PURE__ */ jsx("span", { className: `badge badge-${recipe.difficultyLevel.toLowerCase()}`, children: recipe.difficultyLevel })
-                ] }),
-                /* @__PURE__ */ jsx("span", { className: "click-hint", children: "Click to view full recipe \u2192" })
-              ]
-            },
-            recipe.id
-          )) }) : /* @__PURE__ */ jsxs("div", { className: "no-recipes", children: [
-            /* @__PURE__ */ jsxs("p", { children: [
-              "No recipes available yet for ",
-              selectedCountry.name
-            ] }),
-            /* @__PURE__ */ jsx("p", { className: "no-recipes-hint", children: "Try selecting a different country!" })
-          ] })
-        ] }),
-        !selectedCountry && displayedCountries.length > 0 && /* @__PURE__ */ jsx("div", { className: "recipes-section empty-state", children: /* @__PURE__ */ jsx("p", { children: "\u{1F448} Select a country to view its delicious recipes!" }) })
-      ] })
-    ] })
-  ] }) });
+
+  return (
+    <div className="flavor-map-page page">
+      <div className="container">
+        <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="page-title">
+          🌍 Global Flavor Map
+        </motion.h1>
+        <div className="flavor-map-layout">
+          {/* Globe section */}
+          <div className="globe-section">
+            <div className="globe-card">
+              <div className="map-header">
+                <h2>3D Flavor Globe</h2>
+                <p>Rotate and click a continent hotspot to explore countries and cuisines</p>
+              </div>
+              <div className="globe-canvas-wrapper">
+                <Canvas camera={{ position: [0, 0.2, 2.65], fov: 45 }}>
+                  <GlobeScene
+                    continents={availableContinents}
+                    selectedContinent={selectedContinent}
+                    onSelect={handleContinentClick}
+                  />
+                </Canvas>
+              </div>
+              <div className="continent-picker" aria-label="Choose continent">
+                {availableContinents.map((continent) => {
+                  const isSelected = selectedContinent === continent;
+                  const count = (continents[continent] || []).length;
+                  return (
+                    <button
+                      key={continent}
+                      className={`continent-picker-btn ${isSelected ? "active" : ""}`}
+                      style={{ borderColor: getContinentColor(continent) }}
+                      onClick={() => handleContinentClick(continent)}
+                    >
+                      <span className="continent-picker-dot" style={{ backgroundColor: getContinentColor(continent) }} />
+                      <span className="continent-picker-name">{continent}</span>
+                      <span className="continent-picker-count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="map-footer">
+                <p>📍 Total Countries: {countries.length}</p>
+                <p>🍽️ Click any continent label around the globe to start exploring</p>
+              </div>
+            </div>
+            <div className="continent-selected-panel">
+              <h3>Continent Selected</h3>
+              {selectedContinent ? (
+                <>
+                  <ContinentShape selectedContinent={selectedContinent} />
+                  <div className="continent-meta">
+                    <span
+                      className="continent-chip"
+                      style={{ backgroundColor: getContinentColor(selectedContinent) }}
+                    >
+                      {normalizeContinentName(selectedContinent)}
+                    </span>
+                    <span className="continent-country-count">
+                      {(continents[selectedContinent] || []).length} countries available
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="continent-empty">Select a continent on the globe to preview it here.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Selection section */}
+          <div className="selection-section">
+            {/* Country finder */}
+            <div className="country-finder-bar">
+              <div className="country-finder-header">
+                <div className="country-finder-title-row">
+                  <FaSearch className="country-finder-icon" />
+                  <h3 className="country-finder-title">Country Recipe Finder</h3>
+                </div>
+                <p className="country-finder-subtitle">
+                  Search within{" "}
+                  <span className="country-finder-continent">
+                    {selectedContinent ? normalizeContinentName(selectedContinent) : "all continents"}
+                  </span>
+                </p>
+              </div>
+              <div className="country-finder-input-wrap">
+                <FaSearch className="country-finder-input-icon" />
+                <input
+                  type="text"
+                  className="country-finder-input"
+                  placeholder="e.g. Japan, Brazil, Nigeria…"
+                  value={countrySearch}
+                  onChange={(e) => { setCountrySearch(e.target.value); setCountriesPage(0); }}
+                />
+                {countrySearch && (
+                  <button
+                    type="button"
+                    className="country-finder-clear"
+                    aria-label="Clear search"
+                    onClick={() => { setCountrySearch(""); setCountriesPage(0); }}
+                  >
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+              {countrySearch.trim() && (
+                <p className="country-finder-results">
+                  {totalCountriesInView === 0
+                    ? `No countries match "${countrySearch.trim()}"`
+                    : `${totalCountriesInView} result${totalCountriesInView !== 1 ? "s" : ""} for "${countrySearch.trim()}"`}
+                </p>
+              )}
+            </div>
+
+            {/* Countries grid */}
+            {displayedCountries.length > 0 && (
+              <div className="countries-section">
+                <h3>
+                  {selectedContinent ? `Countries in ${normalizeContinentName(selectedContinent)}` : "All Countries"}
+                  <span className="count-badge">{totalCountriesInView}</span>
+                </h3>
+                <div className="countries-toolbar">
+                  <p className="countries-view-state">
+                    Showing {visibleCountries.length} of {totalCountriesInView} countries
+                  </p>
+                  {hasCountryPagination && (
+                    <div className="countries-pagination-controls">
+                      {!showAllCountries && (
+                        <>
+                          <span className="countries-page-indicator">{countriesPage + 1} / {totalPages}</span>
+                          <button
+                            type="button"
+                            className="country-nav-btn"
+                            onClick={() => setCountriesPage((p) => Math.max(0, p - 1))}
+                            disabled={countriesPage === 0}
+                            aria-label="Previous"
+                          >
+                            <FaChevronLeft />
+                          </button>
+                          <button
+                            type="button"
+                            className="country-nav-btn"
+                            onClick={() => setCountriesPage((p) => Math.min(totalPages - 1, p + 1))}
+                            disabled={countriesPage >= totalPages - 1}
+                            aria-label="Next"
+                          >
+                            <FaChevronRight />
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        className="country-see-all-btn"
+                        onClick={() => { setShowAllCountries((v) => !v); setCountriesPage(0); }}
+                      >
+                        {showAllCountries ? "Show by Page" : "See All"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="countries-grid">
+                  {visibleCountries.map((country) => (
+                    <motion.div
+                      key={country.code}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`country-card ${selectedCountry?.id === country.id ? "selected" : ""}`}
+                      onClick={() => handleCountryClick(country)}
+                    >
+                      <div className="country-flag-wrap">
+                        <ReactCountryFlag countryCode={country.code} svg className="country-flag-svg" title={country.name} />
+                      </div>
+                      <h4>{country.name}</h4>
+                      {country.description && <p className="country-desc">{country.description}</p>}
+                      <span className="click-hint">Click to view recipes →</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recipes section */}
+            {selectedCountry && (
+              <div className="recipes-section">
+                <h3>🍳 Recipes from {selectedCountry.name} {selectedCountry.flagEmoji}</h3>
+                {recipesLoading ? (
+                  <div className="loading">
+                    <div className="spinner" />
+                    <p>Loading recipes...</p>
+                  </div>
+                ) : recipes.length > 0 ? (
+                  <div className="recipes-grid">
+                    {recipes.map((recipe) => (
+                      <motion.div
+                        key={recipe.id}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="recipe-card-mini card"
+                        onClick={() => handleRecipeClick(recipe)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {recipe.image && (
+                          <div className="recipe-card-img-wrap">
+                            <img src={recipe.image} alt={recipe.name} loading="lazy" />
+                          </div>
+                        )}
+                        <div className="recipe-card-mini-body">
+                          <h4>{recipe.name}</h4>
+                          <p>{recipe.description?.slice(0, 90)}…</p>
+                          <div className="recipe-quick-info">
+                            <span><FaClock style={{ marginRight: 4 }} />{recipe.totalTimeMinutes} min</span>
+                            <span className={`badge badge-${(recipe.difficultyLevel || "medium").toLowerCase()}`}>
+                              <FaFire style={{ marginRight: 3 }} />{recipe.difficultyLevel}
+                            </span>
+                          </div>
+                          <span className="click-hint">Click to view full recipe →</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-recipes">
+                    <p>No recipes available yet for {selectedCountry.name}</p>
+                    <p className="no-recipes-hint">Try selecting a different country!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!selectedCountry && displayedCountries.length > 0 && (
+              <div className="recipes-section empty-state">
+                <p>👈 Select a country to view its delicious recipes!</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
-var FlavorMapPage_default = FlavorMapPage;
-export {
-  FlavorMapPage_default as default
-};
+
+export default FlavorMapPage;
