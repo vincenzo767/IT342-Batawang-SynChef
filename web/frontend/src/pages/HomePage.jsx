@@ -11,11 +11,6 @@ import {
 import { ALL_RECIPES, REGIONS, COUNTRIES } from "../data/recipes";
 import "./HomePage.css";
 
-// Guest-only localStorage fallback (authenticated users use the backend)
-const GUEST_FAV_KEY = "synchef_favorites_guest";
-const getGuestFavorites = () => { try { return JSON.parse(localStorage.getItem(GUEST_FAV_KEY) || "[]"); } catch { return []; } };
-const saveGuestFavorites = (ids) => localStorage.setItem(GUEST_FAV_KEY, JSON.stringify(ids));
-
 // Get user country from localStorage (set during registration)
 const getUserCountry = () => {
   try {
@@ -386,18 +381,20 @@ const HomePage = () => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [cookingRecipe, setCookingRecipe] = useState(null);
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [loginPrompt, setLoginPrompt] = useState(false);
   const debounceRef = useRef(null);
+  const loginPromptRef = useRef(null);
   const dispatch = useDispatch();
 
   // Read auth state and user country
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // Sync favorites: authenticated → use Redux (backend-persisted); guest → localStorage
+  // Sync favorites from Redux (backend-persisted) — authenticated users only
   useEffect(() => {
     if (isAuthenticated && user?.favoriteRecipeIds) {
       setLocalFavorites(user.favoriteRecipeIds);
     } else if (!isAuthenticated) {
-      setLocalFavorites(getGuestFavorites());
+      setLocalFavorites([]);
     }
   }, [isAuthenticated, user?.favoriteRecipeIds]);
   const userCountry = useMemo(() => {
@@ -443,34 +440,33 @@ const HomePage = () => {
     setSelectedCountry("");
   };
 
+  const showLoginPrompt = useCallback(() => {
+    setLoginPrompt(true);
+    if (loginPromptRef.current) clearTimeout(loginPromptRef.current);
+    loginPromptRef.current = setTimeout(() => setLoginPrompt(false), 3000);
+  }, []);
+
   const toggleFav = useCallback(async (id) => {
-    if (isAuthenticated) {
-      // Optimistic update
-      setLocalFavorites((prev) => {
-        const next = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
-        return next;
-      });
-      try {
-        const isCurrent = favorites.includes(id);
-        const response = isCurrent
-          ? await userApi.removeFavorite(id)
-          : await userApi.addFavorite(id);
-        // Sync Redux + localStorage with server's authoritative list
-        dispatch(setFavorites(response.data));
-        setLocalFavorites(response.data);
-      } catch {
-        // Revert optimistic update on failure
-        setLocalFavorites(user?.favoriteRecipeIds || []);
-      }
-    } else {
-      // Guest: localStorage only
-      setLocalFavorites((prev) => {
-        const next = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
-        saveGuestFavorites(next);
-        return next;
-      });
+    if (!isAuthenticated) {
+      // Not logged in — show "Log in first" message, do NOT save anything
+      showLoginPrompt();
+      return;
     }
-  }, [isAuthenticated, favorites, dispatch, user?.favoriteRecipeIds]);
+    // Optimistic update
+    setLocalFavorites((prev) => prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]);
+    try {
+      const isCurrent = favorites.includes(id);
+      const response = isCurrent
+        ? await userApi.removeFavorite(id)
+        : await userApi.addFavorite(id);
+      // Sync Redux + localStorage with server's authoritative list
+      dispatch(setFavorites(response.data));
+      setLocalFavorites(response.data);
+    } catch {
+      // Revert optimistic update on failure
+      setLocalFavorites(user?.favoriteRecipeIds || []);
+    }
+  }, [isAuthenticated, favorites, dispatch, user?.favoriteRecipeIds, showLoginPrompt]);
 
   const openRecipe = (recipe) => setSelectedRecipe(recipe);
   const closeRecipe = () => setSelectedRecipe(null);
@@ -677,6 +673,24 @@ const HomePage = () => {
           </div>
         </footer>
       </div>
+
+      {/* Login-required toast — shown when a guest tries to save a recipe */}
+      <AnimatePresence>
+        {loginPrompt && (
+          <motion.div
+            key="login-prompt"
+            className="hp-login-toast"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ duration: 0.25 }}
+          >
+            <span>🔒</span>
+            <span>Log in first, to discover.</span>
+            <a href="/login" className="hp-login-toast-btn">Log In</a>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selectedRecipe && !cookingRecipe && (

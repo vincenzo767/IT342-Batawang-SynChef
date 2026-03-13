@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { refreshUser, logout } from "./store/authSlice";
+import { refreshUser } from "./store/authSlice";
 import { userApi } from "./api";
 import HomePage from "./pages/HomePage";
 import FlavorMapPage from "./pages/FlavorMapPage";
@@ -22,13 +22,17 @@ const App = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-  // On every app load, if the user has a valid token, fetch their latest
-  // profile from the backend so favorites, country, etc. are always current.
+  // On every app load, silently refresh the user profile from the backend
+  // so favorites / country are always up-to-date.
+  // IMPORTANT: DO NOT dispatch logout() in the catch — the apiClient interceptor
+  // already handles 401 (invalid/expired token) → logout + redirect to /login.
+  // For any other error (network down, 500, etc.) we keep the cached session so
+  // the user is NOT kicked out just because the server is temporarily unreachable.
   useEffect(() => {
     if (isAuthenticated) {
       userApi.getMe()
         .then((res) => dispatch(refreshUser(res.data)))
-        .catch(() => dispatch(logout()));
+        .catch(() => { /* stay logged in with cached data on non-401 errors */ });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

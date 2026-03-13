@@ -1,6 +1,39 @@
 /* ── Layout ───────────────────────────────────────────────────── */
 .home-page { flex: 1; }
 
+/* ── Login-required toast ─────────────────────────────────────── */
+.hp-login-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 15, 30, 0.96);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: #fff;
+  padding: 14px 22px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+}
+.hp-login-toast-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.hp-login-toast-btn:hover { opacity: 0.85; }
+
 /* ── Personalized Recommendations ────────────────────────────── */
 .hp-recommendations {
   margin: 0 0 36px 0;
