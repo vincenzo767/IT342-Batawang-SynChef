@@ -1,5 +1,9 @@
+import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { refreshUser, logout } from "./store/authSlice";
+import { userApi } from "./api";
 import HomePage from "./pages/HomePage";
 import FlavorMapPage from "./pages/FlavorMapPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
@@ -15,6 +19,18 @@ import "./App.css";
 
 const App = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+  // On every app load, if the user has a valid token, fetch their latest
+  // profile from the backend so favorites, country, etc. are always current.
+  useEffect(() => {
+    if (isAuthenticated) {
+      userApi.getMe()
+        .then((res) => dispatch(refreshUser(res.data)))
+        .catch(() => dispatch(logout()));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="app">

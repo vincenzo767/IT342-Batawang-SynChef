@@ -69,6 +69,20 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("userCountry");
+    },
+    // Sync fresh user data from the server (favorites, country, etc.)
+    refreshUser: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem("user", JSON.stringify(state.user));
+        if (state.user.countryCode || state.user.countryName) {
+          localStorage.setItem(
+            "userCountry",
+            JSON.stringify({ code: state.user.countryCode || "", name: state.user.countryName || "" })
+          );
+        }
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -84,7 +98,8 @@ export const {
   setAuthResponse,
   setFavorites,
   logout,
-  clearError
+  clearError,
+  refreshUser
 } = authSlice.actions;
 
 export default authSlice.reducer;

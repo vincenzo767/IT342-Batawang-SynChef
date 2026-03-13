@@ -373,19 +373,28 @@ const FlavorMapPage = () => {
     setCountrySearch("");
   };
 
+  const getLocalRecipes = (country) =>
+    ALL_RECIPES.filter(
+      (r) => r.country.toLowerCase() === country.name.toLowerCase()
+    ).map(toFlavorMapRecipe).slice(0, 10);
+
   const handleCountryClick = async (country) => {
     setSelectedCountry(country);
     setRecipesLoading(true);
     setRecipes([]);
     try {
       const response = await recipeApi.getByCountryCode(country.code);
-      setRecipes(Array.isArray(response.data) ? response.data : []);
+      const backendRecipes = Array.isArray(response.data) ? response.data : [];
+      if (backendRecipes.length > 0) {
+        // Backend has recipes — use them, capped at 10
+        setRecipes(backendRecipes.slice(0, 10));
+      } else {
+        // Backend returned nothing — fall back to local data
+        setRecipes(getLocalRecipes(country));
+      }
     } catch {
-      // Fallback: match ALL_RECIPES by country name (case-insensitive)
-      const local = ALL_RECIPES.filter(
-        (r) => r.country.toLowerCase() === country.name.toLowerCase()
-      ).map(toFlavorMapRecipe);
-      setRecipes(local);
+      // Network/server error — fall back to local data
+      setRecipes(getLocalRecipes(country));
     } finally {
       setRecipesLoading(false);
     }
