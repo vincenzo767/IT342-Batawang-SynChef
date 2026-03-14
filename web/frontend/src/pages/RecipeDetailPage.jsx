@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { FaClock, FaUsers, FaPlay, FaUtensils, FaMapMarkerAlt, FaFire } from "react-icons/fa";
-import { recipeApi } from "../api";
+import { FaClock, FaUsers, FaPlay, FaUtensils, FaMapMarkerAlt, FaFire, FaHeart, FaRegHeart } from "react-icons/fa";
+import { recipeApi, userApi } from "../api";
+import { setFavorites } from "../store/authSlice";
 import { ALL_RECIPES } from "../data/recipes";
 import "./RecipeDetailPage.css";
 
@@ -137,9 +139,31 @@ const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated, favoriteRecipeIds } = useSelector((state) => state.auth);
   const [recipe, setRecipe] = useState(null);
   const [servings, setServings] = useState(4);
   const [loading, setLoading] = useState(true);
+  const [favLoading, setFavLoading] = useState(false);
+
+  const recipeId = Number.parseInt(id);
+  const isFavorited = (favoriteRecipeIds || []).includes(recipeId);
+
+  const toggleFavorite = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setFavLoading(true);
+    try {
+      const response = isFavorited
+        ? await userApi.removeFavorite(recipeId)
+        : await userApi.addFavorite(recipeId);
+      // Update top-level favoriteRecipeIds in Redux — no localStorage
+      dispatch(setFavorites(response.data));
+    } catch {
+      // ignore — isFavorited reverts automatically via Redux state
+    } finally {
+      setFavLoading(false);
+    }
+  }, [isAuthenticated, isFavorited, recipeId, dispatch]);
 
   useEffect(() => {
     loadRecipe(Number.parseInt(id));
@@ -360,6 +384,16 @@ const RecipeDetailPage = () => {
           transition={{ delay: 0.5 }}
           className="start-cooking-section"
         >
+          {isAuthenticated && (
+            <button
+              onClick={toggleFavorite}
+              disabled={favLoading}
+              className={`btn btn-favorite${isFavorited ? " active" : ""}`}
+            >
+              {isFavorited ? <FaHeart /> : <FaRegHeart />}
+              {isFavorited ? "Saved to Favorites" : "Add to Favorites"}
+            </button>
+          )}
           <button onClick={handleStartCooking} className="btn btn-primary btn-large">
             <FaPlay /> Start Cooking Mode
           </button>

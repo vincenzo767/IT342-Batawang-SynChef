@@ -13,6 +13,9 @@ const loadStoredUser = () => {
 const initialState = {
   user: loadStoredUser(),
   token: localStorage.getItem("token"),
+  // favoriteRecipeIds lives here, NOT inside user and NOT in localStorage.
+  // It always starts empty and is populated from the backend after login/on mount.
+  favoriteRecipeIds: [],
   isLoading: false,
   error: null,
   isAuthenticated: !!localStorage.getItem("token")
@@ -43,11 +46,11 @@ const authSlice = createSlice({
       const { token, user } = action.payload;
       state.token = token;
       state.user = user;
+      state.favoriteRecipeIds = (user?.favoriteRecipeIds || []).map(Number);
       state.isAuthenticated = true;
       state.error = null;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      // Keep userCountry in sync for any legacy code still reading it
       if (user?.countryCode || user?.countryName) {
         localStorage.setItem(
           "userCountry",
@@ -55,33 +58,33 @@ const authSlice = createSlice({
         );
       }
     },
-    // Update favorites in the Redux store + localStorage after any API call
+    // Update favorites in Redux only — no localStorage, no null-user guard
     setFavorites: (state, action) => {
-      if (state.user) {
-        state.user = { ...state.user, favoriteRecipeIds: action.payload };
-        localStorage.setItem("user", JSON.stringify(state.user));
-      }
+      state.favoriteRecipeIds = (action.payload || []).map(Number);
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.favoriteRecipeIds = [];
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       localStorage.removeItem("userCountry");
     },
-    // Sync fresh user data from the server (favorites, country, etc.)
+    // Sync fresh user data from the server (country, profile, favorites, etc.)
     refreshUser: (state, action) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-        localStorage.setItem("user", JSON.stringify(state.user));
-        if (state.user.countryCode || state.user.countryName) {
-          localStorage.setItem(
-            "userCountry",
-            JSON.stringify({ code: state.user.countryCode || "", name: state.user.countryName || "" })
-          );
-        }
+      // Works even if state.user was null (e.g. token exists but user not yet loaded)
+      state.user = state.user ? { ...state.user, ...action.payload } : { ...action.payload };
+      if (action.payload?.favoriteRecipeIds != null) {
+        state.favoriteRecipeIds = action.payload.favoriteRecipeIds.map(Number);
+      }
+      localStorage.setItem("user", JSON.stringify(state.user));
+      if (state.user?.countryCode || state.user?.countryName) {
+        localStorage.setItem(
+          "userCountry",
+          JSON.stringify({ code: state.user.countryCode || "", name: state.user.countryName || "" })
+        );
       }
     },
     clearError: (state) => {

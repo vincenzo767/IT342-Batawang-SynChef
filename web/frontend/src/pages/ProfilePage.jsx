@@ -17,7 +17,7 @@ const formatJoinDate = (dateStr) => {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, favoriteRecipeIds } = useSelector((state) => state.auth);
 
   const fullName = user?.fullName || "Chef";
   const email = user?.email || "";
@@ -34,11 +34,10 @@ const ProfilePage = () => {
     [fullName]
   );
 
-  // Saved recipes — sourced entirely from backend via Redux (favoriteRecipeIds)
+  // Saved recipes — read from top-level favoriteRecipeIds (no localStorage)
   const savedRecipes = useMemo(() => {
-    const ids = user?.favoriteRecipeIds || [];
-    return ids.map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
-  }, [user]);
+    return (favoriteRecipeIds || []).map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
+  }, [favoriteRecipeIds]);
 
   const savedCount = savedRecipes.length;
 

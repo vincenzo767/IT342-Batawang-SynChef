@@ -387,16 +387,16 @@ const HomePage = () => {
   const dispatch = useDispatch();
 
   // Read auth state and user country
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, favoriteRecipeIds } = useSelector((state) => state.auth);
 
-  // Sync favorites from Redux (backend-persisted) — authenticated users only
+  // Sync local favorites mirror from top-level Redux state (no localStorage)
   useEffect(() => {
-    if (isAuthenticated && user?.favoriteRecipeIds) {
-      setLocalFavorites(user.favoriteRecipeIds);
-    } else if (!isAuthenticated) {
+    if (isAuthenticated) {
+      setLocalFavorites(favoriteRecipeIds || []);
+    } else {
       setLocalFavorites([]);
     }
-  }, [isAuthenticated, user?.favoriteRecipeIds]);
+  }, [isAuthenticated, favoriteRecipeIds]);
   const userCountry = useMemo(() => {
     // Try Redux user first (set on login), then localStorage
     if (user?.countryCode || user?.countryName) {
@@ -448,7 +448,6 @@ const HomePage = () => {
 
   const toggleFav = useCallback(async (id) => {
     if (!isAuthenticated) {
-      // Not logged in — show "Log in first" message, do NOT save anything
       showLoginPrompt();
       return;
     }
@@ -459,14 +458,13 @@ const HomePage = () => {
       const response = isCurrent
         ? await userApi.removeFavorite(id)
         : await userApi.addFavorite(id);
-      // Sync Redux + localStorage with server's authoritative list
+      // Update top-level Redux state (no localStorage)
       dispatch(setFavorites(response.data));
-      setLocalFavorites(response.data);
     } catch {
       // Revert optimistic update on failure
-      setLocalFavorites(user?.favoriteRecipeIds || []);
+      setLocalFavorites(favoriteRecipeIds || []);
     }
-  }, [isAuthenticated, favorites, dispatch, user?.favoriteRecipeIds, showLoginPrompt]);
+  }, [isAuthenticated, favorites, favoriteRecipeIds, dispatch, showLoginPrompt]);
 
   const openRecipe = (recipe) => setSelectedRecipe(recipe);
   const closeRecipe = () => setSelectedRecipe(null);

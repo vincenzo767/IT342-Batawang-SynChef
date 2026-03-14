@@ -29,7 +29,7 @@ const CODE_TO_COUNTRY = {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, favoriteRecipeIds } = useSelector((state) => state.auth);
   const firstName = user?.fullName?.split(" ")[0] || "Chef";
 
   // Resolve user country — backend (Redux) is the source of truth; localStorage is a fallback
@@ -40,11 +40,10 @@ const DashboardPage = () => {
     return getStoredCountry();
   }, [user]);
 
-  // Saved recipes resolved from backend-persisted favorite IDs
+  // Saved recipes — read from top-level favoriteRecipeIds (no localStorage)
   const savedRecipes = useMemo(() => {
-    const ids = user?.favoriteRecipeIds || [];
-    return ids.map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
-  }, [user]);
+    return (favoriteRecipeIds || []).map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
+  }, [favoriteRecipeIds]);
 
   const savedCount = savedRecipes.length;
 

@@ -265,6 +265,41 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-favorite {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: 2px solid #4338ca;
+  background: white;
+  color: #4338ca;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-favorite:hover {
+  background: #4338ca;
+  color: white;
+}
+
+.btn-favorite.active {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  border-color: transparent;
+  color: white;
+}
+
+.btn-favorite:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cooking-mode-hint {
