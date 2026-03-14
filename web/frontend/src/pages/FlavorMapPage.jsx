@@ -258,10 +258,16 @@ const buildRestCountriesByContinent = (restCountries) => {
 };
 
 const fetchRestCountries = async () => {
-  const response = await fetch(restCountriesApiUrl);
-  if (!response.ok) throw new Error(`REST Countries failed: ${response.status}`);
-  const payload = await response.json();
-  return buildRestCountriesByContinent(payload || []);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(restCountriesApiUrl, { signal: controller.signal });
+    if (!response.ok) throw new Error(`REST Countries failed: ${response.status}`);
+    const payload = await response.json();
+    return buildRestCountriesByContinent(payload || []);
+  } finally {
+    clearTimeout(timeout);
+  }
 };
 
 const mockContinents = {
@@ -327,10 +333,12 @@ const buildContinentsData = (fetchedData, restData = {}) => {
   return baseData;
 };
 
+const initialContinents = buildContinentsData({});
+
 const FlavorMapPage = () => {
-  const [countries, setCountries] = useState([]);
-  const [continents, setContinents] = useState({});
-  const [selectedContinent, setSelectedContinent] = useState(null);
+  const [countries, setCountries] = useState(() => Object.values(initialContinents).flat());
+  const [continents, setContinents] = useState(initialContinents);
+  const [selectedContinent, setSelectedContinent] = useState(defaultContinent);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -353,12 +361,8 @@ const FlavorMapPage = () => {
       const mergedContinents = buildContinentsData(backendData, restData);
       setContinents(mergedContinents);
       setCountries(Object.values(mergedContinents).flat());
-      setSelectedContinent((cur) => cur || defaultContinent);
     } catch {
-      const fallback = buildContinentsData({});
-      setContinents(fallback);
-      setCountries(Object.values(fallback).flat());
-      setSelectedContinent((cur) => cur || defaultContinent);
+      // mock data is already set as initial state; nothing extra needed
     } finally {
       setLoading(false);
     }

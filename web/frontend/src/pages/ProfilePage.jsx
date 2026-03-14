@@ -42,6 +42,12 @@ const ProfilePage = () => {
 
   const savedCount = savedRecipes.length;
 
+  // Countries Explored — unique countries across all saved recipes (real-time)
+  const countriesExplored = useMemo(
+    () => new Set(savedRecipes.map((r) => r.country)).size,
+    [savedRecipes]
+  );
+
   // Recent activity — derived from the user's actual saved recipes (most recent last → reversed)
   const recentActivity = useMemo(
     () =>
@@ -87,7 +93,7 @@ const ProfilePage = () => {
               <p>Saved Recipes</p>
             </article>
             <article>
-              <h3 className="tone-indigo">{userCountry ? 1 : 0}</h3>
+              <h3 className="tone-indigo">{countriesExplored}</h3>
               <p>Countries Explored</p>
             </article>
             <article>

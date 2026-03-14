@@ -40,6 +40,20 @@ const DashboardPage = () => {
     return getStoredCountry();
   }, [user]);
 
+  // Saved recipes resolved from backend-persisted favorite IDs
+  const savedRecipes = useMemo(() => {
+    const ids = user?.favoriteRecipeIds || [];
+    return ids.map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
+  }, [user]);
+
+  const savedCount = savedRecipes.length;
+
+  // Countries Explored — unique countries across all saved recipes (updates in real-time)
+  const countriesExplored = useMemo(() => {
+    const uniqueCountries = new Set(savedRecipes.map((r) => r.country));
+    return uniqueCountries.size;
+  }, [savedRecipes]);
+
   // Get recipes recommended for user's country/region
   const recommendedRecipes = useMemo(() => {
     if (!userCountry) return ALL_RECIPES.slice(0, 3);
@@ -53,12 +67,9 @@ const DashboardPage = () => {
     return [...exact, ...regional].slice(0, 3);
   }, [userCountry]);
 
-  // Saved count — sourced from Redux (populated from backend on login/register)
-  const savedCount = user?.favoriteRecipeIds?.length ?? 0;
-
   const stats = [
-    { label: "Saved Recipes", value: savedCount || 0, tone: "purple", icon: <FaBookmark /> },
-    { label: "Countries Explored", value: userCountry ? 1 : 0, tone: "indigo", icon: <FaGlobe /> },
+    { label: "Saved Recipes", value: savedCount, tone: "purple", icon: <FaBookmark /> },
+    { label: "Countries Explored", value: countriesExplored, tone: "indigo", icon: <FaGlobe /> },
     { label: "Recipes Tried", value: 0, tone: "green", icon: <FaCheckCircle /> },
     { label: "Cooking Time", value: "0h", tone: "orange", icon: <FaClock /> }
   ];
@@ -92,7 +103,7 @@ const DashboardPage = () => {
           )}
         </section>
 
-        {/* Stats */}
+        {/* Stats — all values are live from Redux (backend-synced) */}
         <section className="stats-grid">
           {stats.map((item) => (
             <article key={item.label} className="dashboard-card stat-card">
