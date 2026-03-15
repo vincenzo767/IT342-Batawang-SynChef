@@ -65,6 +65,12 @@ public class AuthService {
         user.setFullName(fullName);
         user.setEmailVerified(false);
         user.setActive(true);
+        if (!isBlank(request.getCountryCode())) {
+            user.setCountryCode(request.getCountryCode().toUpperCase().trim());
+        }
+        if (!isBlank(request.getCountryName())) {
+            user.setCountryName(request.getCountryName().trim());
+        }
         
         user = userRepository.save(user);
         
@@ -124,7 +130,7 @@ public class AuthService {
      */
     private AuthResponse buildAuthResponse(User user) {
         String token = tokenProvider.generateToken(user);
-        
+
         AuthResponse response = new AuthResponse();
         response.setToken(token);
         response.setType("Bearer");
@@ -134,7 +140,13 @@ public class AuthService {
         response.setFullName(user.getFullName());
         response.setProfileImageUrl(user.getProfileImageUrl());
         response.setEmailVerified(user.getEmailVerified());
-        
+        response.setCountryCode(user.getCountryCode());
+        response.setCountryName(user.getCountryName());
+        response.setFavoriteRecipeIds(
+            user.getFavoriteRecipeIds() != null ? user.getFavoriteRecipeIds() : new java.util.ArrayList<>()
+        );
+        response.setCreatedAt(user.getCreatedAt());
+
         return response;
     }
     

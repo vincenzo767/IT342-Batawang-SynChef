@@ -38,4 +38,20 @@ class SessionManager(context: Context) {
     fun getUnitSystem(): String = prefs.getString("unitSystem", "METRIC") ?: "METRIC"
     fun getSkillLevel(): String = prefs.getString("skillLevel", "BEGINNER") ?: "BEGINNER"
     fun getReminders(): Boolean = prefs.getBoolean("reminders", true)
+
+    fun saveUserCountry(countryName: String) {
+        prefs.edit().putString("countryName", countryName).apply()
+    }
+
+    fun getUserCountry(): String? = prefs.getString("countryName", null)
+
+    fun saveNotificationPrefs(newRecipes: Boolean, achievements: Boolean) {
+        prefs.edit()
+            .putBoolean("notifNewRecipes", newRecipes)
+            .putBoolean("notifAchievements", achievements)
+            .apply()
+    }
+
+    fun getNotifNewRecipes(): Boolean = prefs.getBoolean("notifNewRecipes", true)
+    fun getNotifAchievements(): Boolean = prefs.getBoolean("notifAchievements", true)
 }

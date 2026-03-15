@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for recipe operations
@@ -44,7 +45,9 @@ public class RecipeController {
     
     @GetMapping("/country/code/{countryCode}")
     public ResponseEntity<List<Recipe>> getRecipesByCountryCode(@PathVariable String countryCode) {
-        return ResponseEntity.ok(recipeRepository.findByCountryCode(countryCode.toUpperCase()));
+        List<Recipe> recipes = recipeRepository.findByCountryCode(countryCode.toUpperCase())
+                .stream().limit(10).collect(Collectors.toList());
+        return ResponseEntity.ok(recipes);
     }
     
     @GetMapping("/category/{categoryId}")

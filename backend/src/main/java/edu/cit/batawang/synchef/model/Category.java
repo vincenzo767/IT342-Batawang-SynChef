@@ -1,5 +1,6 @@
 package edu.cit.batawang.synchef.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,6 +35,7 @@ public class Category {
     @Column(name = "color_code", length = 7)
     private String colorCode; // Hex color for UI
     
+    @JsonIgnore
     @ManyToMany(mappedBy = "categories")
     private List<Recipe> recipes = new ArrayList<>();
 }

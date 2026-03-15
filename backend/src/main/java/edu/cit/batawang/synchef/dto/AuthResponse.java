@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * DTO for authentication response with JWT token
  */
@@ -19,4 +23,8 @@ public class AuthResponse {
     private String fullName;
     private String profileImageUrl;
     private Boolean emailVerified;
+    private String countryCode;
+    private String countryName;
+    private List<Long> favoriteRecipeIds = new ArrayList<>();
+    private LocalDateTime createdAt;
 }

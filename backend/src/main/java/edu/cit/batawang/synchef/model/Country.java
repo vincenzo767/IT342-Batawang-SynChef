@@ -1,5 +1,6 @@
 package edu.cit.batawang.synchef.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,9 +45,11 @@ public class Country {
     @Column(nullable = false)
     private Double longitude;
     
+    @JsonIgnore
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL)
     private List<Recipe> recipes = new ArrayList<>();
-    
+
+    @JsonIgnore
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL)
     private List<Ingredient> traditionalIngredients = new ArrayList<>();
 }

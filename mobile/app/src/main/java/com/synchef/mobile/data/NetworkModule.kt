@@ -7,7 +7,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object NetworkModule {
-    private const val BASE_URL = "http://10.0.2.2:8080/api/"
+    // Use 10.0.2.2 for Android emulator, or your PC's LAN IP (e.g. 192.168.8.x) for a physical device
+    internal const val BASE_URL = "http://192.168.8.106:8080/api/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

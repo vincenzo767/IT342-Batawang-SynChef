@@ -16,4 +16,6 @@ public class RegisterRequest {
     private String password;
     private String confirmPassword;
     private String fullName;
+    private String countryCode;
+    private String countryName;
 }

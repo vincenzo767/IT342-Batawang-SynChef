@@ -19,7 +19,7 @@ data class AuthResponse(
     val id: Long,
     val email: String,
     val username: String,
-    val fullName: String,
+    val fullName: String?,
     val profileImageUrl: String?,
     val emailVerified: Boolean
 )

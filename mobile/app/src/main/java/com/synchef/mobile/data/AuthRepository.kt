@@ -7,11 +7,19 @@ class AuthRepository(private val api: AuthApi) {
     private val gson = Gson()
 
     suspend fun login(request: LoginRequest): Result<AuthResponse> {
-        return handleResponse(api.login(request))
+        return try {
+            handleResponse(api.login(request))
+        } catch (e: Exception) {
+            Result.failure(Exception("Network error: ${e.message}"))
+        }
     }
 
     suspend fun register(request: RegisterRequest): Result<AuthResponse> {
-        return handleResponse(api.register(request))
+        return try {
+            handleResponse(api.register(request))
+        } catch (e: Exception) {
+            Result.failure(Exception("Network error: ${e.message}"))
+        }
     }
 
     private fun handleResponse(response: Response<AuthResponse>): Result<AuthResponse> {

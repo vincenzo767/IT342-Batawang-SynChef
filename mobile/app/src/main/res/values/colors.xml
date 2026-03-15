@@ -3,7 +3,18 @@
     <color name="synchef_bg_top">#667EEA</color>
     <color name="synchef_bg_bottom">#764BA2</color>
     <color name="synchef_primary">#667EEA</color>
+    <color name="synchef_primary_dark">#4F46E5</color>
     <color name="synchef_text_dark">#1F2937</color>
     <color name="synchef_text_light">#6B7280</color>
+    <color name="synchef_text_hint">#9CA3AF</color>
+    <color name="synchef_green">#10B981</color>
+    <color name="synchef_orange">#F59E0B</color>
+    <color name="synchef_red">#EF4444</color>
+    <color name="synchef_indigo">#4F46E5</color>
+    <color name="synchef_surface">#F3F4F6</color>
+    <color name="synchef_divider">#E5E7EB</color>
+    <color name="synchef_card_bg">#FFFFFF</color>
+    <color name="synchef_favorite">#EF4444</color>
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 </resources>

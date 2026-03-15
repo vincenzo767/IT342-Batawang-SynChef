@@ -77,4 +77,10 @@ public class User {
     
     @Column(name = "skill_level", length = 20)
     private String skillLevel = "BEGINNER"; // BEGINNER, INTERMEDIATE, ADVANCED
+
+    @Column(name = "country_code", length = 10)
+    private String countryCode;
+
+    @Column(name = "country_name", length = 150)
+    private String countryName;
 }
