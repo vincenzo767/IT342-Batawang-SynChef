@@ -59,11 +59,25 @@ class ProfileActivity : Activity() {
             startActivity(Intent(this, RecipeListActivity::class.java))
         }
 
+        BottomNavHelper.setup(this, BottomNavHelper.TAB_PROFILE)
         loadProfileData()
     }
 
     private fun loadProfileData() {
         uiScope.launch {
+            val sessionManager = SessionManager(this@ProfileActivity)
+            repository.getUserProfile().onSuccess { profile ->
+                sessionManager.updateUserProfile(profile)
+                findViewById<TextView>(R.id.tvFullName).text = profile.fullName ?: "—"
+                findViewById<TextView>(R.id.tvEmail).text = profile.email ?: "—"
+                findViewById<TextView>(R.id.tvUsername).text = "@${profile.username ?: "—"}"
+                if (!profile.countryName.isNullOrBlank()) {
+                    val tvCountry = findViewById<TextView>(R.id.tvCountry)
+                    tvCountry.text = "Country: ${profile.countryName}"
+                    tvCountry.visibility = View.VISIBLE
+                }
+            }
+
             val favResult = repository.getFavorites()
             val recipesResult = repository.getAllRecipes()
 

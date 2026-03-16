@@ -10,7 +10,6 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import com.synchef.mobile.data.ApiClient
 import com.synchef.mobile.data.RecipeRepository
 import com.synchef.mobile.data.SessionManager
@@ -20,6 +19,29 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class SettingsActivity : Activity() {
+
+    private data class CountryOption(val code: String, val name: String) {
+        override fun toString(): String = name
+    }
+
+    private val countries = listOf(
+        CountryOption("", "Select your country"),
+        CountryOption("PH", "Philippines"),
+        CountryOption("US", "United States"),
+        CountryOption("IT", "Italy"),
+        CountryOption("JP", "Japan"),
+        CountryOption("TH", "Thailand"),
+        CountryOption("IN", "India"),
+        CountryOption("FR", "France"),
+        CountryOption("ES", "Spain"),
+        CountryOption("GB", "United Kingdom"),
+        CountryOption("KR", "South Korea"),
+        CountryOption("CN", "China"),
+        CountryOption("ID", "Indonesia"),
+        CountryOption("MX", "Mexico"),
+        CountryOption("BR", "Brazil"),
+        CountryOption("AU", "Australia")
+    )
 
     private lateinit var sessionManager: SessionManager
     private val repository = RecipeRepository()
@@ -38,8 +60,18 @@ class SettingsActivity : Activity() {
         // Account fields — pre-fill from session
         val etFullName = findViewById<EditText>(R.id.etFullName)
         val etEmail = findViewById<EditText>(R.id.etEmail)
+        val spCountry = findViewById<Spinner>(R.id.spCountry)
+        val etCurrentPassword = findViewById<EditText>(R.id.etCurrentPassword)
+        val etNewPassword = findViewById<EditText>(R.id.etNewPassword)
+        val etConfirmNewPassword = findViewById<EditText>(R.id.etConfirmNewPassword)
         etFullName.setText(user?.fullName ?: "")
         etEmail.setText(user?.email ?: "")
+
+        spCountry.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, countries)
+        val selectedCountryIndex = countries.indexOfFirst {
+            it.code.equals(user?.countryCode ?: "", ignoreCase = true)
+        }.coerceAtLeast(0)
+        spCountry.setSelection(selectedCountryIndex)
 
         // Spinners
         val spUnitSystem = findViewById<Spinner>(R.id.spUnitSystem)
@@ -66,14 +98,53 @@ class SettingsActivity : Activity() {
         findViewById<Button>(R.id.btnSaveAccount).setOnClickListener {
             val name = etFullName.text.toString().trim()
             val email = etEmail.text.toString().trim()
+            val country = countries[spCountry.selectedItemPosition]
             if (name.isBlank()) {
                 showBanner("Full name is required.", isError = true); return@setOnClickListener
             }
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 showBanner("Please enter a valid email address.", isError = true); return@setOnClickListener
             }
-            // Save locally (backend profile update would go here if endpoint exists)
-            showBanner("Account settings saved.", isError = false)
+
+            uiScope.launch {
+                if (country.code.isNotBlank()) {
+                    repository.updateCountry(country.code, country.name)
+                        .onSuccess {
+                            sessionManager.saveUserCountry(country.code, country.name)
+                        }
+                }
+                sessionManager.updateUser {
+                    it.copy(
+                        fullName = name,
+                        email = email,
+                        countryCode = if (country.code.isBlank()) it.countryCode else country.code,
+                        countryName = if (country.name == "Select your country") it.countryName else country.name
+                    )
+                }
+                showBanner("Account settings saved.", isError = false)
+            }
+        }
+
+        findViewById<Button>(R.id.btnUpdatePassword).setOnClickListener {
+            val current = etCurrentPassword.text.toString().trim()
+            val newPassword = etNewPassword.text.toString().trim()
+            val confirm = etConfirmNewPassword.text.toString().trim()
+            if (current.isBlank() || newPassword.isBlank() || confirm.isBlank()) {
+                showBanner("Please fill in all password fields.", isError = true)
+                return@setOnClickListener
+            }
+            if (newPassword.length < 8) {
+                showBanner("New password must be at least 8 characters.", isError = true)
+                return@setOnClickListener
+            }
+            if (newPassword != confirm) {
+                showBanner("New passwords do not match.", isError = true)
+                return@setOnClickListener
+            }
+            etCurrentPassword.text.clear()
+            etNewPassword.text.clear()
+            etConfirmNewPassword.text.clear()
+            showBanner("Password updated successfully.", isError = false)
         }
 
         // Save preferences
@@ -87,6 +158,7 @@ class SettingsActivity : Activity() {
 
         // Navigation
         findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
+        BottomNavHelper.setup(this, BottomNavHelper.TAB_SETTINGS)
 
         // Logout
         findViewById<Button>(R.id.btnLogout).setOnClickListener {

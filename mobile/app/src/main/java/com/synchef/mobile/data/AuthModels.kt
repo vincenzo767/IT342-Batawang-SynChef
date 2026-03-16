@@ -10,7 +10,9 @@ data class RegisterRequest(
     val username: String,
     val password: String,
     val confirmPassword: String,
-    val fullName: String
+    val fullName: String,
+    val countryCode: String? = null,
+    val countryName: String? = null
 )
 
 data class AuthResponse(
@@ -21,7 +23,10 @@ data class AuthResponse(
     val username: String,
     val fullName: String?,
     val profileImageUrl: String?,
-    val emailVerified: Boolean
+    val emailVerified: Boolean,
+    val countryCode: String? = null,
+    val countryName: String? = null,
+    val favoriteRecipeIds: List<Long>? = null
 )
 
 data class ErrorResponse(

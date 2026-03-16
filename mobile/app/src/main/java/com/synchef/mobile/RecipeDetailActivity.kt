@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.synchef.mobile.data.ApiClient
+import com.synchef.mobile.data.ImageUrlResolver
 import com.synchef.mobile.data.RecipeDetail
 import com.synchef.mobile.data.RecipeRepository
 import com.synchef.mobile.data.SessionManager
@@ -110,12 +111,15 @@ class RecipeDetailActivity : Activity() {
 
         // Hero image
         val imgHero = findViewById<ImageView>(R.id.imgHero)
-        if (!recipe.imageUrl.isNullOrBlank()) {
+        val resolvedImageUrl = ImageUrlResolver.resolve(recipe.imageUrl)
+        if (!resolvedImageUrl.isNullOrBlank()) {
             imgHero.visibility = View.VISIBLE
             Glide.with(this)
-                .load(recipe.imageUrl)
+                .load(resolvedImageUrl)
                 .centerCrop()
                 .into(imgHero)
+        } else {
+            imgHero.visibility = View.GONE
         }
 
         // Recipe name + flag

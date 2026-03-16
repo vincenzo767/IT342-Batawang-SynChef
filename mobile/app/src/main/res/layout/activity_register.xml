@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="22dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -25,8 +25,17 @@
                 android:layout_gravity="center_horizontal"
                 android:text="Create Account"
                 android:textColor="@color/synchef_text_dark"
-                android:textSize="30sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Join our culinary community"
+                android:textColor="@color/synchef_text_light"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/tvError"
@@ -44,7 +53,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_input"
-                android:hint="Full name"
+                android:hint="John Doe"
                 android:paddingHorizontal="12dp"
                 android:singleLine="true" />
 
@@ -54,18 +63,8 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_input"
-                android:hint="Email"
+                android:hint="you@example.com"
                 android:inputType="textEmailAddress"
-                android:paddingHorizontal="12dp"
-                android:singleLine="true" />
-
-            <EditText
-                android:id="@+id/etUsername"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_input"
-                android:hint="Username"
                 android:paddingHorizontal="12dp"
                 android:singleLine="true" />
 
@@ -75,10 +74,18 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_input"
-                android:hint="Password"
+                android:hint="At least 8 characters"
                 android:inputType="textPassword"
                 android:paddingHorizontal="12dp"
                 android:singleLine="true" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Must be at least 8 characters long"
+                android:textColor="@color/synchef_text_hint"
+                android:textSize="11sp" />
 
             <EditText
                 android:id="@+id/etConfirmPassword"
@@ -91,6 +98,23 @@
                 android:paddingHorizontal="12dp"
                 android:singleLine="true" />
 
+            <Spinner
+                android:id="@+id/spCountry"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_input"
+                android:paddingHorizontal="8dp" />
+
+            <CheckBox
+                android:id="@+id/cbTerms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="I agree to the Terms of Service and Privacy Policy"
+                android:textColor="@color/synchef_text_light"
+                android:textSize="12sp" />
+
             <Button
                 android:id="@+id/btnRegister"
                 android:layout_width="match_parent"
@@ -100,7 +124,7 @@
                 android:text="Create Account"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -112,6 +136,37 @@
                 android:text="Already have an account? Sign in"
                 android:textColor="@color/synchef_bg_top"
                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnGoogle"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input"
+                    android:text="Google"
+                    android:textAllCaps="false"
+                    android:textColor="@color/synchef_text_dark"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/btnFacebook"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_input"
+                    android:text="Facebook"
+                    android:textAllCaps="false"
+                    android:textColor="@color/synchef_text_dark"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -22,6 +22,9 @@
             android:name=".RecipeListActivity"
             android:exported="false" />
         <activity
+            android:name=".FlavorMapActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity

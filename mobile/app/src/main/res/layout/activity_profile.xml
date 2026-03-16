@@ -321,4 +321,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <include layout="@layout/view_bottom_nav" />
+
 </LinearLayout>

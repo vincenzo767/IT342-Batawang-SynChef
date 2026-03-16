@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.synchef.mobile.data.ImageUrlResolver
 import com.synchef.mobile.data.RecipeListItem
 
 class HomeRecipeAdapter(
@@ -48,9 +49,10 @@ class HomeRecipeAdapter(
             country?.name?.let { append(it) }
         }.trim()
 
-        if (!recipe.imageUrl.isNullOrBlank()) {
+        val resolvedImageUrl = ImageUrlResolver.resolve(recipe.imageUrl)
+        if (!resolvedImageUrl.isNullOrBlank()) {
             Glide.with(holder.itemView.context)
-                .load(recipe.imageUrl)
+                .load(resolvedImageUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .error(android.R.drawable.ic_menu_gallery)
                 .centerCrop()

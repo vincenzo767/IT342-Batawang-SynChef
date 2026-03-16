@@ -2,18 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/synchef_surface"
+    android:background="@drawable/bg_gradient"
     android:orientation="vertical">
 
-    <!-- Top App Bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_button_primary"
-        android:orientation="horizontal"
+        android:layout_height="56dp"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp">
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
 
         <TextView
             android:layout_width="0dp"
@@ -21,381 +18,112 @@
             android:layout_weight="1"
             android:text="SynChef"
             android:textColor="@color/white"
-            android:textSize="22sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="34dp"
             android:background="@drawable/bg_button_secondary"
             android:text="Logout"
             android:textAllCaps="false"
             android:textColor="@color/synchef_red"
-            android:textSize="13sp"
-            android:paddingHorizontal="14dp" />
+            android:textSize="12sp" />
 
     </LinearLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <TextView
+        android:id="@+id/tvWelcome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="56sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvWelcomeSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#E5E7EB"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <EditText
+            android:id="@+id/etDashboardSearch"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_hero"
+            android:drawablePadding="8dp"
+            android:hint="Search by cuisine, ingredient, or region..."
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:paddingHorizontal="12dp"
+            android:singleLine="true"
+            android:textColor="@color/white"
+            android:textColorHint="#B6C2FF"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Go"
+            android:textAllCaps="false"
+            android:textColor="@color/synchef_primary"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="8dp">
+
+        <Button
+            android:id="@+id/btnFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_button_explore"
+            android:text="Filter: All"
+            android:textAllCaps="false"
+            android:textColor="@color/synchef_primary_dark"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvDashboardStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="Loading recipes..."
+        android:textColor="#E5E7EB"
+        android:textSize="13sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDashboardRecipes"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="24dp">
-
-            <!-- Welcome Card -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_button_primary"
-                android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingBottom="24dp"
-                android:paddingTop="4dp">
-
-                <TextView
-                    android:id="@+id/tvWelcome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Welcome back, Chef!"
-                    android:textColor="@color/white"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvWelcomeSub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Discover recipes from around the world."
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tvCountryTag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="#EEFFFFFF"
-                    android:textSize="13sp"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
-            <!-- Stats Grid -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingHorizontal="12dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="4dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_card"
-                    android:elevation="2dp"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:id="@+id/tvStatSaved"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/synchef_primary"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Saved"
-                        android:textColor="@color/synchef_text_light"
-                        android:textSize="11sp"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_card"
-                    android:elevation="2dp"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:id="@+id/tvStatCountries"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/synchef_indigo"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Countries"
-                        android:textColor="@color/synchef_text_light"
-                        android:textSize="11sp"
-                        android:layout_marginTop="2dp" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Quick Actions -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Quick Actions"
-                    android:textColor="@color/synchef_text_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btnBrowseRecipes"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:text="Browse Recipes"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnProfile"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        android:background="@drawable/bg_button_secondary"
-                        android:text="My Profile"
-                        android:textAllCaps="false"
-                        android:textColor="@color/synchef_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/btnSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_input"
-                    android:text="Settings"
-                    android:textAllCaps="false"
-                    android:textColor="@color/synchef_text_light"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-            <!-- Recommended Recipes Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Recommended For You"
-                    android:textColor="@color/synchef_text_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvRecommendedLoading"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Loading..."
-                    android:textColor="@color/synchef_text_hint"
-                    android:textSize="13sp" />
-
-                <!-- Recommended list populated in code -->
-                <LinearLayout
-                    android:id="@+id/llRecommended"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="8dp" />
-
-                <Button
-                    android:id="@+id/btnViewAllRecipes"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_button_secondary"
-                    android:text="View All Recipes"
-                    android:textAllCaps="false"
-                    android:textColor="@color/synchef_primary"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-            <!-- Global Flavor Map -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Global Flavor Map"
-                    android:textColor="@color/synchef_text_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Explore recipes by continent"
-                    android:textColor="@color/synchef_text_light"
-                    android:textSize="12sp" />
-
-                <!-- Row 1 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btnRegionAsia"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="Asia"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnRegionEurope"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginHorizontal="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="Europe"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnRegionAfrica"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="Africa"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Row 2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btnRegionNorthAmerica"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="N. America"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnRegionSouthAmerica"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginHorizontal="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="S. America"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btnRegionOceania"
-                        android:layout_width="0dp"
-                        android:layout_height="64dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="5dp"
-                        android:background="@drawable/bg_region_tile"
-                        android:text="Oceania"
-                        android:textAllCaps="false"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    <include layout="@layout/view_bottom_nav" />
 
 </LinearLayout>

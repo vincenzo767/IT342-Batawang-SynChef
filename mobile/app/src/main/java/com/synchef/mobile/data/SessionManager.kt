@@ -14,6 +14,12 @@ class SessionManager(context: Context) {
             .apply()
     }
 
+    fun updateUser(transform: (AuthResponse) -> AuthResponse) {
+        val current = getUser() ?: return
+        val updated = transform(current)
+        prefs.edit().putString("user", gson.toJson(updated)).apply()
+    }
+
     fun getUser(): AuthResponse? {
         val userJson = prefs.getString("user", null) ?: return null
         return gson.fromJson(userJson, AuthResponse::class.java)
@@ -43,6 +49,18 @@ class SessionManager(context: Context) {
         prefs.edit().putString("countryName", countryName).apply()
     }
 
+    fun saveUserCountry(countryCode: String?, countryName: String?) {
+        if (!countryName.isNullOrBlank()) {
+            prefs.edit().putString("countryName", countryName).apply()
+        }
+        updateUser {
+            it.copy(
+                countryCode = countryCode ?: it.countryCode,
+                countryName = countryName ?: it.countryName
+            )
+        }
+    }
+
     fun getUserCountry(): String? = prefs.getString("countryName", null)
 
     fun saveNotificationPrefs(newRecipes: Boolean, achievements: Boolean) {
@@ -50,6 +68,24 @@ class SessionManager(context: Context) {
             .putBoolean("notifNewRecipes", newRecipes)
             .putBoolean("notifAchievements", achievements)
             .apply()
+    }
+
+    fun updateUserProfile(profile: UserProfile) {
+        updateUser {
+            it.copy(
+                email = profile.email ?: it.email,
+                username = profile.username ?: it.username,
+                fullName = profile.fullName ?: it.fullName,
+                profileImageUrl = profile.profileImageUrl ?: it.profileImageUrl,
+                emailVerified = profile.emailVerified,
+                countryCode = profile.countryCode ?: it.countryCode,
+                countryName = profile.countryName ?: it.countryName,
+                favoriteRecipeIds = profile.favoriteRecipeIds ?: it.favoriteRecipeIds
+            )
+        }
+        if (!profile.countryName.isNullOrBlank()) {
+            prefs.edit().putString("countryName", profile.countryName).apply()
+        }
     }
 
     fun getNotifNewRecipes(): Boolean = prefs.getBoolean("notifNewRecipes", true)

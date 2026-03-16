@@ -1,331 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@drawable/bg_gradient"
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- ===== HEADER / NAV BAR ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@color/synchef_primary_dark"
-            android:orientation="horizontal"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="SynChef"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnLogin"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Login"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:background="@drawable/bg_button_primary"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:stateListAnimator="@null" />
-
-        </LinearLayout>
-
-        <!-- ===== HERO SECTION ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_gradient"
-            android:orientation="vertical"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:paddingTop="32dp"
-            android:paddingBottom="24dp"
-            android:gravity="center_horizontal">
+            android:text="⚜"
+            android:textColor="@color/synchef_orange"
+            android:textSize="34sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvHeroTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Discover Global Flavors"
-                android:textColor="@color/white"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:lineSpacingMultiplier="1.1" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Search authentic recipes from every corner of the world. Real ingredients, real culture, real cooking."
-                android:textColor="#CCffffff"
-                android:textSize="13sp"
-                android:gravity="center"
-                android:lineSpacingMultiplier="1.3" />
-
-            <!-- Search Bar -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/etHomeSearch"
-                    android:layout_width="0dp"
-                    android:layout_height="46dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_input_hero"
-                    android:hint="Search recipe, ingredient, or country..."
-                    android:textColorHint="#88FFFFFF"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:paddingLeft="14dp"
-                    android:paddingRight="14dp"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:singleLine="true" />
-
-                <Button
-                    android:id="@+id/btnHomeSearch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="46dp"
-                    android:text="Search"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:background="@drawable/bg_button_secondary"
-                    android:layout_marginStart="8dp"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:stateListAnimator="@null" />
-
-            </LinearLayout>
-
-            <!-- Explore Button -->
-            <Button
-                android:id="@+id/btnExplore"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:text="Explore the Flavor Map"
-                android:textColor="@color/synchef_primary_dark"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:background="@drawable/bg_button_explore"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
-                android:stateListAnimator="@null" />
-
-        </LinearLayout>
-
-        <!-- ===== FEATURE CARDS ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_gradient"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="28dp"
-            android:orientation="horizontal">
-
-            <!-- Global Cuisine Explorer -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/bg_feature_card"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:text="&#127757;"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:background="@drawable/bg_feature_icon" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Global Cuisine Explorer"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="Discover recipes from 6 continents with cultural insights"
-                    android:textColor="#CCffffff"
-                    android:textSize="10sp"
-                    android:gravity="center" />
-
-            </LinearLayout>
-
-            <!-- Step-by-Step Cooking -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginLeft="3dp"
-                android:layout_marginRight="3dp"
-                android:background="@drawable/bg_feature_card"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:text="&#127860;"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:background="@drawable/bg_feature_icon" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Step-by-Step Cooking Mode"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="Guided tutorials with integrated timers for every step"
-                    android:textColor="#CCffffff"
-                    android:textSize="10sp"
-                    android:gravity="center" />
-
-            </LinearLayout>
-
-            <!-- Cultural Deep Dives -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:background="@drawable/bg_feature_card"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:text="&#128205;"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:background="@drawable/bg_feature_icon" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Cultural Deep Dives"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="Learn the stories and traditions behind every dish"
-                    android:textColor="#CCffffff"
-                    android:textSize="10sp"
-                    android:gravity="center" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- ===== RECIPES SECTION (white bg) ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:orientation="vertical">
-
-            <!-- Continent Filter Tabs -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:paddingTop="14dp"
-                android:paddingBottom="4dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp">
-
-                <LinearLayout
-                    android:id="@+id/llFilterTabs"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal" />
-
-            </HorizontalScrollView>
-
-            <!-- Section Title -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Featured Recipes"
-                android:textColor="@color/synchef_text_dark"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="8dp" />
-
-            <!-- Loading / error status -->
-            <TextView
-                android:id="@+id/tvHomeStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Loading recipes..."
-                android:textColor="@color/synchef_text_light"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:padding="32dp"
-                android:visibility="visible" />
-
-            <!-- Recipes 2-column grid -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvHomeRecipes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:paddingBottom="24dp"
-                android:clipToPadding="false" />
-
-        </LinearLayout>
-
+            android:layout_marginStart="8dp"
+            android:text="SynChef"
+            android:textColor="@color/white"
+            android:textSize="38sp"
+            android:textStyle="bold" />
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="38dp"
+        android:text="Welcome!"
+        android:textColor="@color/white"
+        android:textSize="44sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvHeroTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="78dp"
+        android:gravity="center"
+        android:lineSpacingExtra="-6dp"
+        android:text="Discover Global Flavors"
+        android:textColor="@color/white"
+        android:textSize="60sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:text="Explore authentic recipes from around the world, powered by AI-driven recommendations tailored to your taste"
+        android:textColor="#D1D5DB"
+        android:textSize="19sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginHorizontal="50dp"
+        android:background="@drawable/bg_button_explore"
+        android:text="Log In"
+        android:textAllCaps="false"
+        android:textColor="@color/synchef_primary_dark"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnSignUp"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginHorizontal="50dp"
+        android:background="@drawable/bg_button_explore"
+        android:text="Sign Up"
+        android:textAllCaps="false"
+        android:textColor="@color/synchef_primary_dark"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

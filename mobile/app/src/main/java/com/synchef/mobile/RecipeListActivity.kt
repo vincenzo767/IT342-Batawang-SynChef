@@ -25,6 +25,7 @@ class RecipeListActivity : Activity() {
 
     companion object {
         const val EXTRA_REGION_FILTER = "region_filter"
+        const val EXTRA_COUNTRY_CODE = "country_code"
     }
 
     private val repository = RecipeRepository()
@@ -39,6 +40,7 @@ class RecipeListActivity : Activity() {
 
     private var allRecipes: List<RecipeListItem> = emptyList()
     private var regionFilter: String? = null
+    private var countryCodeFilter: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +51,7 @@ class RecipeListActivity : Activity() {
         ApiClient.tokenProvider = { session.getToken() }
 
         regionFilter = intent.getStringExtra(EXTRA_REGION_FILTER)
+        countryCodeFilter = intent.getStringExtra(EXTRA_COUNTRY_CODE)
 
         rvRecipes = findViewById(R.id.rvRecipes)
         tvStatus = findViewById(R.id.tvStatus)
@@ -92,11 +95,11 @@ class RecipeListActivity : Activity() {
         uiScope.launch {
             val result = repository.getAllRecipes()
             result.onSuccess { recipes ->
-                allRecipes = recipes
-                val filtered = if (regionFilter != null) {
-                    recipes.filter { it.country?.continent?.equals(regionFilter, ignoreCase = true) == true }
-                } else {
-                    recipes
+                allRecipes = repository.getMergedRecipesWithWebFallback(recipes)
+                val filtered = allRecipes.filter { recipe ->
+                    val regionOk = regionFilter == null || recipe.country?.continent?.equals(regionFilter, ignoreCase = true) == true
+                    val countryOk = countryCodeFilter == null || recipe.country?.code?.equals(countryCodeFilter, ignoreCase = true) == true
+                    regionOk && countryOk
                 }
                 if (filtered.isEmpty()) {
                     tvStatus.text = "No recipes found."
@@ -106,16 +109,32 @@ class RecipeListActivity : Activity() {
                 }
                 adapter.updateRecipes(filtered)
             }.onFailure { err ->
-                tvStatus.text = "Could not load recipes: ${err.message}"
-                tvStatus.visibility = View.VISIBLE
+                allRecipes = repository.getMergedRecipesWithWebFallback(emptyList())
+                val filtered = allRecipes.filter { recipe ->
+                    val regionOk = regionFilter == null || recipe.country?.continent?.equals(regionFilter, ignoreCase = true) == true
+                    val countryOk = countryCodeFilter == null || recipe.country?.code?.equals(countryCodeFilter, ignoreCase = true) == true
+                    regionOk && countryOk
+                }
+                if (filtered.isEmpty()) {
+                    tvStatus.text = "Could not load recipes: ${err.message}"
+                    tvStatus.visibility = View.VISIBLE
+                } else {
+                    tvStatus.visibility = View.GONE
+                }
+                adapter.updateRecipes(filtered)
             }
         }
     }
 
     private fun performSearch(keyword: String) {
         if (keyword.isBlank()) {
-            adapter.updateRecipes(allRecipes)
-            tvStatus.visibility = if (allRecipes.isEmpty()) View.VISIBLE else View.GONE
+            val filtered = allRecipes.filter { recipe ->
+                val regionOk = regionFilter == null || recipe.country?.continent?.equals(regionFilter, ignoreCase = true) == true
+                val countryOk = countryCodeFilter == null || recipe.country?.code?.equals(countryCodeFilter, ignoreCase = true) == true
+                regionOk && countryOk
+            }
+            adapter.updateRecipes(filtered)
+            tvStatus.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
             return
         }
 
@@ -123,30 +142,22 @@ class RecipeListActivity : Activity() {
         tvStatus.text = "Searching..."
 
         uiScope.launch {
-            val result = repository.searchRecipes(keyword)
-            result.onSuccess { recipes ->
-                if (recipes.isEmpty()) {
-                    tvStatus.text = "No results for \"$keyword\"."
-                    tvStatus.visibility = View.VISIBLE
-                } else {
-                    tvStatus.visibility = View.GONE
-                }
-                adapter.updateRecipes(recipes)
-            }.onFailure {
-                // Fallback: filter locally
-                val local = allRecipes.filter { r ->
-                    r.name.contains(keyword, ignoreCase = true) ||
-                        r.country?.name?.contains(keyword, ignoreCase = true) == true ||
-                        r.categories?.any { c -> c.name?.contains(keyword, ignoreCase = true) == true } == true
-                }
-                if (local.isEmpty()) {
-                    tvStatus.text = "No results for \"$keyword\"."
-                    tvStatus.visibility = View.VISIBLE
-                } else {
-                    tvStatus.visibility = View.GONE
-                }
-                adapter.updateRecipes(local)
+            val local = allRecipes.filter { r ->
+                val regionOk = regionFilter == null || r.country?.continent?.equals(regionFilter, ignoreCase = true) == true
+                val countryOk = countryCodeFilter == null || r.country?.code?.equals(countryCodeFilter, ignoreCase = true) == true
+                val keywordOk = r.name.contains(keyword, ignoreCase = true) ||
+                    r.country?.name?.contains(keyword, ignoreCase = true) == true ||
+                    r.categories?.any { c -> c.name?.contains(keyword, ignoreCase = true) == true } == true
+                regionOk && countryOk && keywordOk
             }
+
+            if (local.isEmpty()) {
+                tvStatus.text = "No results for \"$keyword\"."
+                tvStatus.visibility = View.VISIBLE
+            } else {
+                tvStatus.visibility = View.GONE
+            }
+            adapter.updateRecipes(local)
         }
     }
 

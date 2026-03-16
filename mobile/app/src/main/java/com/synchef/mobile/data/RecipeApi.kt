@@ -14,11 +14,22 @@ interface RecipeApi {
     @GET("recipes/search")
     suspend fun searchRecipes(@Query("keyword") keyword: String): Response<List<RecipeListItem>>
 
+    @GET("recipes/country/code/{countryCode}")
+    suspend fun getRecipesByCountryCode(
+        @Path("countryCode") countryCode: String
+    ): Response<List<RecipeListItem>>
+
     @GET("recipes/{id}/scale")
     suspend fun getScaledRecipe(
         @Path("id") id: Long,
         @Query("servings") servings: Int
     ): Response<ScaledRecipe>
+}
+
+interface CountryApi {
+
+    @GET("countries/continents")
+    suspend fun getCountriesGroupedByContinent(): Response<Map<String, List<CountryInfo>>>
 }
 
 interface UserApi {
