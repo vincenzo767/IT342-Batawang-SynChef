@@ -201,10 +201,14 @@ class FlavorMapActivity : Activity() {
     private fun setupGlobeWebView(webView: WebView) {
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+      webView.settings.allowFileAccess = true
+      webView.settings.allowContentAccess = true
+      webView.settings.allowFileAccessFromFileURLs = true
+      webView.settings.allowUniversalAccessFromFileURLs = true
         webView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
         webView.webViewClient = WebViewClient()
         webView.addJavascriptInterface(GlobeBridge(), "AndroidBridge")
-        webView.loadDataWithBaseURL(null, globeHtml(), "text/html", "utf-8", null)
+      webView.loadDataWithBaseURL("file:///android_asset/", globeHtml(), "text/html", "utf-8", null)
     }
 
     private inner class GlobeBridge {
@@ -236,29 +240,10 @@ class FlavorMapActivity : Activity() {
                   width: 100%;
                   height: 100%;
                 }
-                .globe {
-                  position: absolute;
-                  width: min(62vw, 230px);
-                  height: min(62vw, 230px);
-                  left: 50%;
-                  top: 52%;
-                  transform: translate(-50%, -50%);
-                  border-radius: 50%;
-                  background:
-                    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.28), rgba(255,255,255,0.04) 42%, rgba(0,0,0,0.25) 85%),
-                    radial-gradient(circle at 65% 65%, #4bd2ff 0%, #2176b8 35%, #0f4f8f 68%, #0a376a 100%);
-                  box-shadow: inset -20px -24px 45px rgba(0,0,0,0.4), 0 18px 36px rgba(0,0,0,0.38);
-                  animation: spin 16s linear infinite;
-                }
-                .ring {
-                  position: absolute;
-                  width: calc(min(62vw, 230px) + 26px);
-                  height: calc(min(62vw, 230px) + 26px);
-                  left: 50%;
-                  top: 52%;
-                  transform: translate(-50%, -50%);
-                  border-radius: 50%;
-                  border: 1px solid rgba(255,255,255,0.25);
+                #globeCanvas {
+                  width: 100%;
+                  height: 100%;
+                  display: block;
                 }
                 .marker {
                   position: absolute;
@@ -279,54 +264,224 @@ class FlavorMapActivity : Activity() {
                   background: #facc15;
                   border-color: #facc15;
                 }
-                @keyframes spin {
-                  from { transform: translate(-50%, -50%) rotateY(0deg); }
-                  to { transform: translate(-50%, -50%) rotateY(360deg); }
+                #fallbackMessage {
+                  position: absolute;
+                  left: 50%;
+                  top: 50%;
+                  transform: translate(-50%, -50%);
+                  color: #e2e8f0;
+                  background: rgba(2, 6, 23, 0.72);
+                  border: 1px solid rgba(148, 163, 184, 0.4);
+                  border-radius: 10px;
+                  padding: 8px 10px;
+                  font-size: 12px;
+                  display: none;
                 }
               </style>
             </head>
             <body>
               <div id='scene'>
-                <div class='ring'></div>
-                <div class='globe'></div>
+                <canvas id='globeCanvas'></canvas>
+                <div id='fallbackMessage'>3D globe failed to initialize.</div>
               </div>
-              <script>
-                const hotspots = {
-                  'Asia': { x: 72, y: 42 },
-                  'Europe': { x: 47, y: 30 },
-                  'Africa': { x: 49, y: 58 },
-                  'North America': { x: 27, y: 33 },
-                  'South America': { x: 34, y: 67 },
-                  'Oceania': { x: 82, y: 69 }
-                };
+              <script type='module'>
+                import * as THREE from './three/three.module.min.js';
+                import { OrbitControls } from './three/OrbitControls.js';
 
                 const sceneEl = document.getElementById('scene');
+                const canvas = document.getElementById('globeCanvas');
+                const fallbackMessage = document.getElementById('fallbackMessage');
                 const markers = {};
+                const labelByName = {};
 
-                Object.entries(hotspots).forEach(([name, pos]) => {
-                  const marker = document.createElement('div');
-                  marker.className = 'marker';
-                  marker.textContent = name;
-                  marker.style.left = pos.x + '%';
-                  marker.style.top = pos.y + '%';
-                  marker.addEventListener('click', () => {
+                const hotspotGeo = {
+                  'Asia': { latitude: 33, longitude: 95 },
+                  'Europe': { latitude: 51, longitude: 15 },
+                  'Africa': { latitude: 6, longitude: 20 },
+                  'North America': { latitude: 46, longitude: -102 },
+                  'South America': { latitude: -18, longitude: -60 },
+                  'Oceania': { latitude: -23, longitude: 134 }
+                };
+
+                const continentColors = {
+                  'Asia': '#ec4899',
+                  'Europe': '#f59e0b',
+                  'Africa': '#06b6d4',
+                  'North America': '#14b8a6',
+                  'South America': '#8b5cf6',
+                  'Oceania': '#22c55e'
+                };
+
+                function showFallback(message) {
+                  fallbackMessage.textContent = message || '3D globe failed to initialize.';
+                  fallbackMessage.style.display = 'block';
+                }
+
+                try {
+                  const scene = new THREE.Scene();
+                  scene.background = new THREE.Color('#04142e');
+
+                  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+                  camera.position.set(0, 0.2, 2.7);
+
+                  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+                  renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+                  const controls = new OrbitControls(camera, renderer.domElement);
+                  controls.enablePan = false;
+                  controls.minDistance = 1.9;
+                  controls.maxDistance = 3.6;
+                  controls.autoRotate = false;
+
+                  scene.add(new THREE.AmbientLight('#ffffff', 0.92));
+                  scene.add(new THREE.HemisphereLight('#e2f3ff', '#1e3a8a', 0.56));
+                  const directional = new THREE.DirectionalLight('#ffffff', 1.38);
+                  directional.position.set(3.6, 2.4, 3.2);
+                  scene.add(directional);
+                  const point = new THREE.PointLight('#38bdf8', 0.28);
+                  point.position.set(-2.6, -1.1, -3.4);
+                  scene.add(point);
+
+                  function toSpherePosition(latitude, longitude, radius) {
+                    const phi = (90 - latitude) * (Math.PI / 180);
+                    const theta = (longitude + 180) * (Math.PI / 180);
+                    const x = -radius * Math.sin(phi) * Math.cos(theta);
+                    const y = radius * Math.cos(phi);
+                    const z = radius * Math.sin(phi) * Math.sin(theta);
+                    return new THREE.Vector3(x, y, z);
+                  }
+
+                  const globeGroup = new THREE.Group();
+                  scene.add(globeGroup);
+
+                  const textureLoader = new THREE.TextureLoader();
+                  const earthMap = textureLoader.load('./textures/planets/earth_atmos_2048.jpg');
+                  const earthNormalMap = textureLoader.load('./textures/planets/earth_normal_2048.jpg');
+                  const earthSpecularMap = textureLoader.load('./textures/planets/earth_specular_2048.jpg');
+                  const cloudMap = textureLoader.load('./textures/planets/earth_clouds_1024.png');
+
+                  earthMap.colorSpace = THREE.SRGBColorSpace;
+                  earthSpecularMap.colorSpace = THREE.SRGBColorSpace;
+                  cloudMap.colorSpace = THREE.SRGBColorSpace;
+
+                  const earth = new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 64, 64),
+                    new THREE.MeshPhongMaterial({
+                      map: earthMap,
+                      normalMap: earthNormalMap,
+                      specularMap: earthSpecularMap,
+                      specular: new THREE.Color('#dbeafe'),
+                      shininess: 22,
+                      emissive: new THREE.Color('#102743'),
+                      emissiveIntensity: 0.15
+                    })
+                  );
+                  globeGroup.add(earth);
+
+                  const clouds = new THREE.Mesh(
+                    new THREE.SphereGeometry(1.018, 64, 64),
+                    new THREE.MeshPhongMaterial({
+                      map: cloudMap,
+                      transparent: true,
+                      opacity: 0.25,
+                      depthWrite: false,
+                      side: THREE.DoubleSide
+                    })
+                  );
+                  globeGroup.add(clouds);
+
+                  const raycaster = new THREE.Raycaster();
+                  const pointer = new THREE.Vector2();
+
+                  Object.entries(hotspotGeo).forEach(([name, geo]) => {
+                    const color = continentColors[name] || '#22d3ee';
+                    const marker = new THREE.Mesh(
+                      new THREE.SphereGeometry(0.03, 18, 18),
+                      new THREE.MeshBasicMaterial({ color: color })
+                    );
+                    marker.position.copy(toSpherePosition(geo.latitude, geo.longitude, 1.03));
+                    marker.userData.continent = name;
+                    globeGroup.add(marker);
+                    markers[name] = marker;
+
+                    const label = document.createElement('div');
+                    label.className = 'marker';
+                    label.textContent = name;
+                    label.addEventListener('click', () => {
+                      selectContinent(name);
+                      if (window.AndroidBridge && window.AndroidBridge.onContinentClick) {
+                        window.AndroidBridge.onContinentClick(name);
+                      }
+                    });
+                    sceneEl.appendChild(label);
+                    labelByName[name] = label;
+                  });
+
+                  renderer.domElement.addEventListener('click', function(event) {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    raycaster.setFromCamera(pointer, camera);
+                    const hitList = raycaster.intersectObjects(Object.values(markers));
+                    if (!hitList || hitList.length === 0) return;
+                    const name = hitList[0].object.userData.continent;
                     selectContinent(name);
                     if (window.AndroidBridge && window.AndroidBridge.onContinentClick) {
                       window.AndroidBridge.onContinentClick(name);
                     }
                   });
-                  sceneEl.appendChild(marker);
-                  markers[name] = marker;
-                });
 
-                function selectContinent(name) {
-                  Object.entries(markers).forEach(([key, marker]) => {
-                    if (key === name) marker.classList.add('active');
-                    else marker.classList.remove('active');
-                  });
+                  function selectContinent(name) {
+                    Object.entries(markers).forEach(([continent, marker]) => {
+                      const color = continentColors[continent] || '#22d3ee';
+                      marker.material.color.set(continent === name ? '#facc15' : color);
+                    });
+                    Object.entries(labelByName).forEach(([continent, label]) => {
+                      if (continent === name) label.classList.add('active');
+                      else label.classList.remove('active');
+                    });
+                  }
+                  window.selectContinent = selectContinent;
+
+                  function resize() {
+                    const width = sceneEl.clientWidth;
+                    const height = sceneEl.clientHeight;
+                    if (width <= 0 || height <= 0) return;
+                    camera.aspect = width / height;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(width, height, false);
+                  }
+
+                  function renderLabels() {
+                    Object.entries(markers).forEach(([name, marker]) => {
+                      const screenPos = marker.position.clone().applyMatrix4(globeGroup.matrixWorld).project(camera);
+                      const x = (screenPos.x * 0.5 + 0.5) * sceneEl.clientWidth;
+                      const y = (screenPos.y * -0.5 + 0.5) * sceneEl.clientHeight;
+                      const label = labelByName[name];
+                      label.style.left = x + 'px';
+                      label.style.top = y + 'px';
+                      label.style.opacity = screenPos.z < 1 ? '1' : '0';
+                    });
+                  }
+
+                  window.addEventListener('resize', resize);
+                  resize();
+
+                  selectContinent('Asia');
+
+                  function animate() {
+                    requestAnimationFrame(animate);
+                    globeGroup.rotation.y += 0.0012;
+                    clouds.rotation.y += 0.0017;
+                    controls.update();
+                    renderer.render(scene, camera);
+                    renderLabels();
+                  }
+
+                  animate();
+                } catch (err) {
+                  showFallback('3D rendering error: ' + (err && err.message ? err.message : 'unknown'));
                 }
-                window.selectContinent = selectContinent;
-                selectContinent('Asia');
               </script>
             </body>
             </html>

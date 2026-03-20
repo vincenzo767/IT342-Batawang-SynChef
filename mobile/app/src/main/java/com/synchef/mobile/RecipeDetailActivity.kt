@@ -85,7 +85,7 @@ class RecipeDetailActivity : Activity() {
 
     private fun loadRecipe(recipeId: Long) {
         uiScope.launch {
-            val result = repository.getRecipeById(recipeId)
+            val result = repository.getRecipeByIdWithFallback(this@RecipeDetailActivity, recipeId)
             result.onSuccess { recipe ->
                 currentRecipe = recipe
                 defaultServings = recipe.defaultServings.takeIf { it > 0 } ?: 4
@@ -111,16 +111,16 @@ class RecipeDetailActivity : Activity() {
 
         // Hero image
         val imgHero = findViewById<ImageView>(R.id.imgHero)
-        val resolvedImageUrl = ImageUrlResolver.resolve(recipe.imageUrl)
-        if (!resolvedImageUrl.isNullOrBlank()) {
-            imgHero.visibility = View.VISIBLE
-            Glide.with(this)
-                .load(resolvedImageUrl)
-                .centerCrop()
-                .into(imgHero)
-        } else {
-            imgHero.visibility = View.GONE
-        }
+        val resolvedImageUrl = ImageUrlResolver.resolve(
+            recipe.imageUrl ?: fallbackImageUrlForRecipe(recipe.name)
+        )
+        imgHero.visibility = View.VISIBLE
+        Glide.with(this)
+            .load(resolvedImageUrl)
+            .placeholder(android.R.drawable.ic_menu_gallery)
+            .error(android.R.drawable.ic_menu_gallery)
+            .centerCrop()
+            .into(imgHero)
 
         // Recipe name + flag
         findViewById<TextView>(R.id.tvRecipeName).text = recipe.name
@@ -199,5 +199,14 @@ class RecipeDetailActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         screenJob.cancel()
+    }
+
+    private fun fallbackImageUrlForRecipe(recipeName: String?): String {
+        val normalized = recipeName.orEmpty().trim().lowercase()
+        return when {
+            normalized.contains("adobong sitaw") -> "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80"
+            normalized.contains("adobo") -> "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80"
+            else -> "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
+        }
     }
 }

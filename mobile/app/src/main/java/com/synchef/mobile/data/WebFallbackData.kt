@@ -14,6 +14,8 @@ data class WebRecipeSeed(
 
 object WebFallbackData {
 
+    const val FALLBACK_ID_OFFSET = 10_000L
+
     private val countryToCode = mapOf(
         "Italy" to "IT", "Thailand" to "TH", "Mexico" to "MX", "Japan" to "JP", "India" to "IN",
         "Spain" to "ES", "South Korea" to "KR", "Vietnam" to "VN", "Morocco" to "MA", "China" to "CN",
@@ -23,13 +25,29 @@ object WebFallbackData {
         "Portugal" to "PT", "Nigeria" to "NG", "New Zealand" to "NZ", "Indonesia" to "ID"
     )
 
-    private fun flagFromCountryCode(code: String?): String {
+    fun flagFromCountryCode(code: String?): String {
         if (code.isNullOrBlank() || code.length != 2) return ""
         val base = 0x1F1E6
         val chars = code.uppercase()
         val first = Character.toChars(base + (chars[0].code - 'A'.code))
         val second = Character.toChars(base + (chars[1].code - 'A'.code))
         return String(first) + String(second)
+    }
+
+    fun countryCodeFor(countryName: String?): String? {
+        if (countryName.isNullOrBlank()) return null
+        return countryToCode[countryName]
+    }
+
+    fun toFallbackRecipeId(webRecipeId: Long): Long = FALLBACK_ID_OFFSET + webRecipeId
+
+    fun fromFallbackRecipeId(fallbackId: Long): Long? {
+        if (!isFallbackRecipeId(fallbackId)) return null
+        return fallbackId - FALLBACK_ID_OFFSET
+    }
+
+    fun isFallbackRecipeId(recipeId: Long): Boolean {
+        return recipeId >= FALLBACK_ID_OFFSET
     }
 
     private val seeds = listOf(
@@ -68,7 +86,7 @@ object WebFallbackData {
         return seeds.map { seed ->
             val code = countryToCode[seed.country]
             RecipeListItem(
-                id = seed.id,
+                id = toFallbackRecipeId(seed.id),
                 name = seed.name,
                 description = seed.description,
                 imageUrl = seed.imageUrl,

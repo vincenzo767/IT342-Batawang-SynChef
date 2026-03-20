@@ -1,5 +1,7 @@
 package com.synchef.mobile.data
 
+import android.content.Context
+
 class RecipeRepository {
 
     private val api = ApiClient.recipeApi
@@ -15,6 +17,22 @@ class RecipeRepository {
     suspend fun getRecipeById(id: Long): Result<RecipeDetail> = safeCall {
         val response = api.getRecipeById(id)
         response.body() ?: throw Exception("Recipe not found")
+    }
+
+    suspend fun getRecipeByIdWithFallback(context: Context, id: Long): Result<RecipeDetail> = safeCall {
+        if (WebFallbackData.isFallbackRecipeId(id)) {
+            return@safeCall WebFallbackRecipeDetails.findByFallbackId(context, id)
+                ?: throw Exception("Recipe not found")
+        }
+
+        val response = api.getRecipeById(id)
+        val backendDetail = response.body()
+        if (backendDetail != null) {
+            return@safeCall WebFallbackRecipeDetails.enrichFromName(context, backendDetail)
+        }
+
+        WebFallbackRecipeDetails.findByLegacyWebId(context, id)
+            ?: throw Exception("Recipe not found")
     }
 
     suspend fun searchRecipes(keyword: String): Result<List<RecipeListItem>> = safeCall {

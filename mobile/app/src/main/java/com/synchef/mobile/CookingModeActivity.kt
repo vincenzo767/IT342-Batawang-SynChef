@@ -56,7 +56,7 @@ class CookingModeActivity : Activity() {
 
     private fun loadRecipe(recipeId: Long) {
         uiScope.launch {
-            repository.getRecipeById(recipeId).onSuccess { r ->
+            repository.getRecipeByIdWithFallback(this@CookingModeActivity, recipeId).onSuccess { r ->
                 recipe = r
                 if (r.steps.isEmpty()) {
                     finish()
