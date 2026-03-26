@@ -156,8 +156,6 @@ class SettingsActivity : Activity() {
             showBanner("Preferences saved.", isError = false)
         }
 
-        // Navigation
-        findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
         BottomNavHelper.setup(this, BottomNavHelper.TAB_SETTINGS)
 
         // Logout

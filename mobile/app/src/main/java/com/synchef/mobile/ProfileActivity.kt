@@ -54,7 +54,6 @@ class ProfileActivity : Activity() {
         val joinedText = "Member since recently"
         findViewById<TextView>(R.id.tvJoined).text = joinedText
 
-        findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnViewAllSaved).setOnClickListener {
             startActivity(Intent(this, RecipeListActivity::class.java))
         }

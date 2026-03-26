@@ -1,83 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/synchef_surface"
     android:orientation="vertical">
 
-    <!-- Top Bar -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_button_primary"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
-
-        <Button
-            android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Back"
-            android:textAllCaps="false"
-            android:textColor="@color/synchef_primary"
-            android:textSize="13sp"
-            android:paddingHorizontal="14dp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Settings"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <View android:layout_width="60dp" android:layout_height="36dp" />
-
-    </LinearLayout>
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="32dp">
+            android:paddingBottom="16dp">
 
-            <!-- Status banner -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Settings"
+                    android:textColor="@color/synchef_text_dark"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="56dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_tag"
+                    android:gravity="center"
+                    android:text="Prefs"
+                    android:textColor="@color/synchef_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tvBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
                 android:gravity="center"
                 android:padding="12dp"
                 android:textSize="14sp"
                 android:visibility="gone" />
 
-            <!-- Account Settings -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="16dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="3dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Account Settings"
-                    android:textColor="@color/synchef_text_dark"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/bg_button_primary"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your Preferences"
+                        android:textColor="@color/white"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Manage account, cooking, and notifications"
+                        android:textColor="#DCE5FF"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Account Settings"
+                        android:textColor="@color/synchef_text_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -133,28 +172,35 @@
                     android:background="@drawable/bg_input"
                     android:padding="4dp" />
 
-                <Button
-                    android:id="@+id/btnSaveAccount"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_button_primary"
-                    android:text="Save Account Settings"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    <Button
+                        android:id="@+id/btnSaveAccount"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="Save Account Settings"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
 
-            </LinearLayout>
+                </LinearLayout>
 
-            <!-- Cooking Preferences -->
-            <LinearLayout
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -196,17 +242,24 @@
                     android:background="@drawable/bg_input"
                     android:padding="4dp" />
 
-            </LinearLayout>
+                </LinearLayout>
 
-            <!-- Change Password -->
-            <LinearLayout
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -273,28 +326,35 @@
                     android:textColor="@color/synchef_text_dark"
                     android:textSize="14sp" />
 
-                <Button
-                    android:id="@+id/btnUpdatePassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_button_primary"
-                    android:text="Update Password"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    <Button
+                        android:id="@+id/btnUpdatePassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="Update Password"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
 
-            </LinearLayout>
+                </LinearLayout>
 
-            <!-- Notification Preferences -->
-            <LinearLayout
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -331,28 +391,35 @@
                     android:textColor="@color/synchef_text_dark"
                     android:textSize="14sp" />
 
-                <Button
-                    android:id="@+id/btnSavePrefs"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_button_primary"
-                    android:text="Save Preferences"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    <Button
+                        android:id="@+id/btnSavePrefs"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="Save Preferences"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
 
-            </LinearLayout>
+                </LinearLayout>
 
-            <!-- Danger Zone -->
-            <LinearLayout
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="10dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -362,19 +429,21 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/btnLogout"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_input"
-                    android:text="Logout"
-                    android:textAllCaps="false"
-                    android:textColor="@color/synchef_red"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    <Button
+                        android:id="@+id/btnLogout"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input"
+                        android:text="Logout"
+                        android:textAllCaps="false"
+                        android:textColor="@color/synchef_red"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
-            </LinearLayout>
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
     </ScrollView>

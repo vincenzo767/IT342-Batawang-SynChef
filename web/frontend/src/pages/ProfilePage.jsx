@@ -69,7 +69,7 @@ const ProfilePage = () => {
     return list;
   }, [savedCount, userCountry]);
 
-  const earnedBadgeCount = achievements.filter((a) => a.badge !== "👨‍🍳").length;
+  const earnedBadgeCount = achievements.filter((a) => a.badge !== "👨‍�").length;
 
   return (
     <div className="profile-page">
