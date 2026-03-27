@@ -40,9 +40,24 @@ const DashboardPage = () => {
     return getStoredCountry();
   }, [user]);
 
-  // Saved recipes — read from top-level favoriteRecipeIds (no localStorage)
+  // Saved recipes — read from top-level favoriteRecipeIds (no localStorage).
+  // Mobile stores fallback IDs (webId + 10000); translate back to local recipe.
+  const FALLBACK_OFFSET = 10000;
   const savedRecipes = useMemo(() => {
-    return (favoriteRecipeIds || []).map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
+    const seen = new Set();
+    return (favoriteRecipeIds || [])
+      .map((id) => {
+        const direct = ALL_RECIPES.find((r) => r.id === id);
+        if (direct) return direct;
+        if (id >= FALLBACK_OFFSET) return ALL_RECIPES.find((r) => r.id === id - FALLBACK_OFFSET) || null;
+        return null;
+      })
+      .filter((r) => {
+        if (!r) return false;
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      });
   }, [favoriteRecipeIds]);
 
   const savedCount = savedRecipes.length;

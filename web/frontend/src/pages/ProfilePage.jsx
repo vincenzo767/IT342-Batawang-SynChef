@@ -1,8 +1,10 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useMemo, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { FaCalendarAlt, FaMapMarkerAlt, FaBookmark, FaHeart } from "react-icons/fa";
 import { ALL_RECIPES } from "../data/recipes";
+import { refreshUser } from "../store/authSlice";
+import { userApi, recipeApi } from "../api";
 import "./ProfilePage.css";
 
 const formatJoinDate = (dateStr) => {
@@ -17,7 +19,56 @@ const formatJoinDate = (dateStr) => {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { user, favoriteRecipeIds } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const { user, favoriteRecipeIds, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Fetch fresh user data whenever navigating to /profile
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchUserData = () => {
+      userApi.getMe()
+        .then((res) => dispatch(refreshUser(res.data)))
+        .catch(() => { /* keep cached data on network errors */ });
+    };
+    fetchUserData();
+  }, [location.pathname, isAuthenticated, dispatch]);
+
+  // Poll for fresh data every 10 seconds while viewing ProfilePage
+  // This ensures real-time sync if another device (mobile) saves recipes
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    console.log("[ProfilePage] Starting 10-second polling");
+    const pollInterval = setInterval(() => {
+      console.log("[ProfilePage] Polling tick - fetching fresh data");
+      userApi.getMe()
+        .then((res) => {
+          console.log("[ProfilePage] Polling success - favorites:", res.data.favoriteRecipeIds);
+          dispatch(refreshUser(res.data));
+        })
+        .catch((err) => {
+          console.error("[ProfilePage] Polling failed:", err.message);
+        });
+    }, 10000); // 10 seconds
+    return () => {
+      console.log("[ProfilePage] Stopping polling");
+      clearInterval(pollInterval);
+    };
+  }, [isAuthenticated, dispatch]);
+
+  // Refresh data when browser tab regains focus (user switches back from mobile)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        userApi.getMe()
+          .then((res) => dispatch(refreshUser(res.data)))
+          .catch(() => { /* keep cached data */ });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isAuthenticated, dispatch]);
 
   const fullName = user?.fullName || "Chef";
   const email = user?.email || "";
@@ -34,10 +85,64 @@ const ProfilePage = () => {
     [fullName]
   );
 
-  // Saved recipes — read from top-level favoriteRecipeIds (no localStorage)
-  const savedRecipes = useMemo(() => {
-    return (favoriteRecipeIds || []).map((id) => ALL_RECIPES.find((r) => r.id === id)).filter(Boolean);
+  // Mobile uses FALLBACK_ID_OFFSET (10000) to store local recipe IDs:
+  // mobile recipe 26 → stored in backend favorites as 10026.
+  // We need to recognize these when resolving favorites cross-platform.
+  const FALLBACK_OFFSET = 10000;
+
+  // For saved recipe IDs that aren't resolvable locally (neither direct nor via
+  // mobile fallback offset), fetch their details from the backend.
+  const [backendOnlyRecipes, setBackendOnlyRecipes] = useState([]);
+
+  useEffect(() => {
+    const missingIds = (favoriteRecipeIds || []).filter((id) => {
+      if (ALL_RECIPES.find((r) => r.id === id)) return false;
+      // Mobile fallback ID: id = FALLBACK_OFFSET + webRecipeId
+      if (id >= FALLBACK_OFFSET && ALL_RECIPES.find((r) => r.id === id - FALLBACK_OFFSET)) return false;
+      return true;
+    });
+    if (missingIds.length === 0) {
+      setBackendOnlyRecipes([]);
+      return;
+    }
+    Promise.all(
+      missingIds.map((id) =>
+        recipeApi.getById(id)
+          .then((res) => ({
+            id: res.data.id,
+            title: res.data.name,
+            country: res.data.country?.name || "",
+            cuisine: res.data.categories?.[0]?.name || "",
+            time: `${res.data.totalTimeMinutes} min`,
+            image: res.data.imageUrl || null
+          }))
+          .catch(() => null)
+      )
+    ).then((results) => setBackendOnlyRecipes(results.filter(Boolean)));
   }, [favoriteRecipeIds]);
+
+  // Saved recipes — resolve direct IDs, then mobile fallback IDs, then backend-only
+  const savedRecipes = useMemo(() => {
+    const seen = new Set();
+    const local = (favoriteRecipeIds || [])
+      .map((id) => {
+        const direct = ALL_RECIPES.find((r) => r.id === id);
+        if (direct) return direct;
+        // Translate mobile fallback ID back to local recipe
+        if (id >= FALLBACK_OFFSET) {
+          const fromFallback = ALL_RECIPES.find((r) => r.id === id - FALLBACK_OFFSET);
+          if (fromFallback) return fromFallback;
+        }
+        return null;
+      })
+      .filter((r) => {
+        if (!r) return false;
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      });
+    return [...local, ...backendOnlyRecipes];
+  }, [favoriteRecipeIds, backendOnlyRecipes]);
 
   const savedCount = savedRecipes.length;
 

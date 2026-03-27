@@ -17,6 +17,7 @@ import com.synchef.mobile.data.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class DashboardActivity : Activity() {
@@ -25,6 +26,9 @@ class DashboardActivity : Activity() {
     private val repository = RecipeRepository()
     private val screenJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + screenJob)
+
+    // Background polling job for real-time sync with web
+    private var pollJob: Job? = null
 
     private lateinit var adapter: RecipeAdapter
     private lateinit var tvStatus: TextView
@@ -88,7 +92,83 @@ class DashboardActivity : Activity() {
         }
 
         BottomNavHelper.setup(this, BottomNavHelper.TAB_HOME)
+        
+        // Refresh user profile and favorites from backend on app startup
+        // This ensures mobile data is always in sync with backend
+        refreshUserDataFromBackend()
+        
         loadRecipes()
+    }
+
+    /**
+     * Refresh user profile and favorites from the backend.
+     * Called on activity creation and resume to ensure data is always synchronized.
+     */
+    private fun refreshUserDataFromBackend() {
+        android.util.Log.d("DashboardActivity", "refreshUserDataFromBackend() called")
+        uiScope.launch {
+            // Fetch fresh user profile (loads country, usernames, etc.)
+            repository.getUserProfile().onSuccess { profile ->
+                android.util.Log.d("DashboardActivity", "Profile refreshed: ${profile.email}")
+                sessionManager.updateUserProfile(profile)
+            }.onFailure { err ->
+                android.util.Log.e("DashboardActivity", "Failed to refresh user profile: ${err.message}")
+            }
+
+            // Fetch fresh favorites list from backend
+            repository.getFavorites().onSuccess { favoriteIds ->
+                android.util.Log.d("DashboardActivity", "Favorites refreshed: $favoriteIds")
+                sessionManager.updateUser {
+                    it.copy(favoriteRecipeIds = favoriteIds)
+                }
+            }.onFailure { err ->
+                android.util.Log.e("DashboardActivity", "Failed to refresh favorites: ${err.message}")
+            }
+        }
+    }
+
+    /**
+     * Refresh data whenever user returns to this activity (e.g. after visiting ProfileActivity or web app)
+     * This ensures cross-platform sync: if user saved recipes on web, mobile will pick them up
+     */
+    override fun onResume() {
+        super.onResume()
+        refreshUserDataFromBackend()
+
+        // Start polling for changes every 20 seconds while DashboardActivity is visible
+        // This ensures real-time sync if web saves recipes
+        startPolling()
+    }
+
+    /**
+     * Stop polling when activity is paused to save battery
+     */
+    override fun onPause() {
+        super.onPause()
+        stopPolling()
+    }
+
+    private fun startPolling() {
+        // Cancel existing poll job if any
+        stopPolling()
+
+        android.util.Log.d("DashboardActivity", "Starting polling every 20 seconds")
+        // Start new polling job
+        pollJob = uiScope.launch {
+            while (true) {
+                delay(20000) // 20 seconds
+                android.util.Log.d("DashboardActivity", "Polling tick at ${System.currentTimeMillis()}")
+                refreshUserDataFromBackend()
+            }
+        }
+    }
+
+    private fun stopPolling() {
+        if (pollJob != null) {
+            android.util.Log.d("DashboardActivity", "Stopping polling")
+        }
+        pollJob?.cancel()
+        pollJob = null
     }
 
     private fun loadRecipes() {

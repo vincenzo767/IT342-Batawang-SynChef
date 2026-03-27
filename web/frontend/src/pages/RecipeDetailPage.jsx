@@ -147,15 +147,28 @@ const RecipeDetailPage = () => {
   const [favLoading, setFavLoading] = useState(false);
 
   const recipeId = Number.parseInt(id);
-  const isFavorited = (favoriteRecipeIds || []).includes(recipeId);
+
+  // Mobile stores web recipe IDs with a +10000 offset (FALLBACK_ID_OFFSET).
+  // e.g. web recipe 2 → mobile saves as 10002. Check both when determining favorite state.
+  const FALLBACK_OFFSET = 10000;
+  const mobileFallbackId = recipeId + FALLBACK_OFFSET;
+  const ids = favoriteRecipeIds || [];
+  const isFavorited = ids.includes(recipeId) || ids.includes(mobileFallbackId);
+  // The ID actually stored in the backend (prefer small web ID, fallback to mobile ID)
+  const storedFavoriteId = ids.includes(recipeId) ? recipeId : ids.includes(mobileFallbackId) ? mobileFallbackId : null;
 
   const toggleFavorite = useCallback(async () => {
     if (!isAuthenticated) return;
     setFavLoading(true);
     try {
-      const response = isFavorited
-        ? await userApi.removeFavorite(recipeId)
-        : await userApi.addFavorite(recipeId);
+      let response;
+      if (isFavorited) {
+        // Remove whichever ID variant is stored (web ID or mobile fallback ID)
+        response = await userApi.removeFavorite(storedFavoriteId ?? recipeId);
+      } else {
+        // Always add using the web small ID from this platform
+        response = await userApi.addFavorite(recipeId);
+      }
       // Update top-level favoriteRecipeIds in Redux — no localStorage
       dispatch(setFavorites(response.data));
     } catch {
@@ -163,7 +176,7 @@ const RecipeDetailPage = () => {
     } finally {
       setFavLoading(false);
     }
-  }, [isAuthenticated, isFavorited, recipeId, dispatch]);
+  }, [isAuthenticated, isFavorited, recipeId, storedFavoriteId, dispatch]);
 
   useEffect(() => {
     loadRecipe(Number.parseInt(id));

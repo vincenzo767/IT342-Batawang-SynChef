@@ -446,17 +446,32 @@ const HomePage = () => {
     loginPromptRef.current = setTimeout(() => setLoginPrompt(false), 3000);
   }, []);
 
+  // Mobile stores web recipe IDs with +10000 offset. Check both when reading/toggling favorites.
+  const FALLBACK_OFFSET = 10000;
+
+  // Returns the ID actually stored in the favorites list for the given web recipe ID,
+  // or null if not saved. Checks both the web ID and the mobile fallback ID.
+  const getStoredFavId = useCallback((webId) => {
+    if (favorites.includes(webId)) return webId;
+    const fallbackId = webId + FALLBACK_OFFSET;
+    if (favorites.includes(fallbackId)) return fallbackId;
+    return null;
+  }, [favorites]);
+
   const toggleFav = useCallback(async (id) => {
     if (!isAuthenticated) {
       showLoginPrompt();
       return;
     }
-    // Optimistic update
-    setLocalFavorites((prev) => prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]);
+    const storedId = getStoredFavId(id);
+    const isCurrent = storedId !== null;
+    // Optimistic update — mirror the backend result locally
+    setLocalFavorites((prev) =>
+      isCurrent ? prev.filter((f) => f !== storedId) : [...prev, id]
+    );
     try {
-      const isCurrent = favorites.includes(id);
       const response = isCurrent
-        ? await userApi.removeFavorite(id)
+        ? await userApi.removeFavorite(storedId)
         : await userApi.addFavorite(id);
       // Update top-level Redux state (no localStorage)
       dispatch(setFavorites(response.data));
@@ -464,7 +479,7 @@ const HomePage = () => {
       // Revert optimistic update on failure
       setLocalFavorites(favoriteRecipeIds || []);
     }
-  }, [isAuthenticated, favorites, favoriteRecipeIds, dispatch, showLoginPrompt]);
+  }, [isAuthenticated, favorites, favoriteRecipeIds, getStoredFavId, dispatch, showLoginPrompt]);
 
   const openRecipe = (recipe) => setSelectedRecipe(recipe);
   const closeRecipe = () => setSelectedRecipe(null);
@@ -604,7 +619,7 @@ const HomePage = () => {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    isFav={favorites.includes(recipe.id)}
+                    isFav={getStoredFavId(recipe.id) !== null}
                     onOpen={openRecipe}
                     onToggleFav={toggleFav}
                   />
@@ -649,7 +664,7 @@ const HomePage = () => {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    isFav={favorites.includes(recipe.id)}
+                    isFav={getStoredFavId(recipe.id) !== null}
                     onOpen={openRecipe}
                     onToggleFav={toggleFav}
                   />
@@ -697,7 +712,7 @@ const HomePage = () => {
             recipe={selectedRecipe}
             onClose={closeRecipe}
             onStartCooking={openCooking}
-            isFav={favorites.includes(selectedRecipe.id)}
+            isFav={getStoredFavId(selectedRecipe.id) !== null}
             onToggleFav={() => toggleFav(selectedRecipe.id)}
           />
         )}

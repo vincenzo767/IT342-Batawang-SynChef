@@ -18,6 +18,7 @@ import com.synchef.mobile.data.ImageUrlResolver
 import com.synchef.mobile.data.RecipeDetail
 import com.synchef.mobile.data.RecipeRepository
 import com.synchef.mobile.data.SessionManager
+import com.synchef.mobile.data.WebFallbackData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -71,27 +72,23 @@ class RecipeDetailActivity : Activity() {
             startActivity(intent)
         }
 
-        loadFavorites()
-        loadRecipe(recipeId)
+        loadFavoritesAndRecipe(recipeId)
     }
 
-    private fun loadFavorites() {
+    private fun loadFavoritesAndRecipe(recipeId: Long) {
         uiScope.launch {
-            repository.getFavorites().onSuccess { ids ->
-                favoriteIds = ids
-            }
-        }
-    }
+            // Load favorites first so isFavorited is correct when the recipe renders.
+            repository.getFavorites().onSuccess { ids -> favoriteIds = ids }
 
-    private fun loadRecipe(recipeId: Long) {
-        uiScope.launch {
             val result = repository.getRecipeByIdWithFallback(this@RecipeDetailActivity, recipeId)
             result.onSuccess { recipe ->
                 currentRecipe = recipe
                 defaultServings = recipe.defaultServings.takeIf { it > 0 } ?: 4
                 currentServings = defaultServings
 
-                isFavorited = favoriteIds.contains(recipeId)
+                // Check both the fallback ID and the web small ID (for cross-platform sync).
+                // Web saves recipes with small IDs (1-29); mobile stores them as fallback IDs (10001-10029).
+                isFavorited = isRecipeFavorited(recipeId, favoriteIds)
                 updateFavoriteButton()
                 showRecipe(recipe)
             }.onFailure { err ->
@@ -163,22 +160,53 @@ class RecipeDetailActivity : Activity() {
         }
     }
 
+    /**
+     * Returns true if the recipe is favorited, checking both the fallback ID and the web small ID.
+     * Web saves with small IDs (e.g. 2); mobile stores them as fallback IDs (e.g. 10002).
+     */
+    private fun isRecipeFavorited(recipeId: Long, ids: List<Long>): Boolean {
+        if (recipeId in ids) return true
+        val webId = WebFallbackData.fromFallbackRecipeId(recipeId)
+        return webId != null && webId in ids
+    }
+
+    /**
+     * Returns the ID actually stored in favorites for this recipe, or null if not stored.
+     * Handles cross-platform ID mismatch between web (small ID) and mobile (fallback ID).
+     */
+    private fun storedFavoriteId(recipeId: Long, ids: List<Long>): Long? {
+        if (recipeId in ids) return recipeId
+        val webId = WebFallbackData.fromFallbackRecipeId(recipeId)
+        return if (webId != null && webId in ids) webId else null
+    }
+
     private fun toggleFavorite(recipeId: Long) {
         uiScope.launch {
             if (isFavorited) {
-                repository.removeFavorite(recipeId).onSuccess { ids ->
+                // Remove whichever ID variant is actually stored (web small ID or fallback ID)
+                val idToRemove = storedFavoriteId(recipeId, favoriteIds) ?: recipeId
+                repository.removeFavorite(idToRemove).onSuccess { ids ->
                     favoriteIds = ids
                     isFavorited = false
                     updateFavoriteButton()
+                    // CRITICAL: Update SessionManager so favorites persist across activities
+                    session.updateUser { user ->
+                        user.copy(favoriteRecipeIds = ids)
+                    }
                     Toast.makeText(this@RecipeDetailActivity, "Removed from favorites", Toast.LENGTH_SHORT).show()
                 }.onFailure {
                     Toast.makeText(this@RecipeDetailActivity, "Failed to update favorites", Toast.LENGTH_SHORT).show()
                 }
             } else {
+                // Always add using the fallback ID so mobile-saved recipes are consistent
                 repository.addFavorite(recipeId).onSuccess { ids ->
                     favoriteIds = ids
                     isFavorited = true
                     updateFavoriteButton()
+                    // CRITICAL: Update SessionManager so favorites persist across activities
+                    session.updateUser { user ->
+                        user.copy(favoriteRecipeIds = ids)
+                    }
                     Toast.makeText(this@RecipeDetailActivity, "Saved to favorites!", Toast.LENGTH_SHORT).show()
                 }.onFailure {
                     Toast.makeText(this@RecipeDetailActivity, "Failed to update favorites", Toast.LENGTH_SHORT).show()

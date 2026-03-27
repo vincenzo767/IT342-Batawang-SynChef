@@ -13,9 +13,12 @@ import com.synchef.mobile.data.RecipeListItem
 import com.synchef.mobile.data.RecipeRepository
 import com.synchef.mobile.data.SessionManager
 import com.synchef.mobile.data.UserProfile
+import com.synchef.mobile.data.WebFallbackData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ProfileActivity : Activity() {
@@ -23,6 +26,9 @@ class ProfileActivity : Activity() {
     private val repository = RecipeRepository()
     private val screenJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + screenJob)
+
+    // Background polling job for real-time sync
+    private var pollJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,10 +68,58 @@ class ProfileActivity : Activity() {
         loadProfileData()
     }
 
+    /**
+     * Refresh data whenever user returns to profile (e.g. after saving recipe in another activity)
+     * This ensures cross-platform sync: if user saved recipes on web, mobile will pick them up
+     */
+    override fun onResume() {
+        super.onResume()
+        loadProfileData()
+
+        // Start polling for changes every 15 seconds while ProfileActivity is visible
+        // This ensures real-time sync if web or another device saves recipes
+        startPolling()
+    }
+
+    /**
+     * Stop polling when activity is paused to save battery
+     */
+    override fun onPause() {
+        super.onPause()
+        stopPolling()
+    }
+
+    private fun startPolling() {
+        // Cancel existing poll job if any
+        stopPolling()
+
+        android.util.Log.d("ProfileActivity", "Starting polling every 15 seconds")
+        // Start new polling job
+        pollJob = uiScope.launch {
+            while (true) {
+                delay(15000) // 15 seconds
+                android.util.Log.d("ProfileActivity", "Polling tick at ${System.currentTimeMillis()}")
+                loadProfileData()
+            }
+        }
+    }
+
+    private fun stopPolling() {
+        if (pollJob != null) {
+            android.util.Log.d("ProfileActivity", "Stopping polling")
+        }
+        pollJob?.cancel()
+        pollJob = null
+    }
+
     private fun loadProfileData() {
+        android.util.Log.d("ProfileActivity", "loadProfileData() called at ${System.currentTimeMillis()}")
         uiScope.launch {
             val sessionManager = SessionManager(this@ProfileActivity)
+
+            // Fetch profile first
             repository.getUserProfile().onSuccess { profile ->
+                android.util.Log.d("ProfileActivity", "Profile fetched: ${profile.email}")
                 sessionManager.updateUserProfile(profile)
                 findViewById<TextView>(R.id.tvFullName).text = profile.fullName ?: "—"
                 findViewById<TextView>(R.id.tvEmail).text = profile.email ?: "—"
@@ -75,20 +129,44 @@ class ProfileActivity : Activity() {
                     tvCountry.text = "Country: ${profile.countryName}"
                     tvCountry.visibility = View.VISIBLE
                 }
+            }.onFailure { err ->
+                android.util.Log.e("ProfileActivity", "Profile fetch failed: ${err.message}")
             }
 
-            val favResult = repository.getFavorites()
-            val recipesResult = repository.getAllRecipes()
-
+            // Fetch favoriteIds and all recipes in parallel
             var favIds: List<Long> = emptyList()
             var allRecipes: List<RecipeListItem> = emptyList()
 
-            favResult.onSuccess { ids -> favIds = ids }
-            recipesResult.onSuccess { recipes -> allRecipes = recipes }
+            repository.getFavorites().onSuccess { ids ->
+                android.util.Log.d("ProfileActivity", "Favorites fetched: $ids")
+                favIds = ids
+                sessionManager.updateUser { it.copy(favoriteRecipeIds = ids) }
+            }.onFailure { err ->
+                android.util.Log.e("ProfileActivity", "Favorites fetch failed: ${err.message}")
+            }
 
-            val savedRecipes = allRecipes.filter { it.id in favIds }
+            repository.getAllRecipes().onSuccess { recipes ->
+                android.util.Log.d("ProfileActivity", "Recipes fetched: ${recipes.size}")
+                allRecipes = repository.getMergedRecipesWithWebFallback(recipes)
+            }.onFailure { err ->
+                android.util.Log.e("ProfileActivity", "Recipes fetch failed: ${err.message}")
+            }
+
+            // Compute stats once both fetches complete.
+            // Web uses small IDs (1-29); mobile stores them as fallback IDs (10001-10029).
+            // We need to match both directions:
+            //   - favId saved from web (e.g. 2) → match fallback recipe with id (2 + 10000 = 10002)
+            //   - favId saved from mobile (e.g. 10026) → match fallback recipe with id 10026 directly
+            val favIdSet = favIds.toSet()
+            val savedRecipes = allRecipes.filter { recipe ->
+                recipe.id in favIdSet ||
+                (recipe.id >= WebFallbackData.FALLBACK_ID_OFFSET &&
+                 WebFallbackData.fromFallbackRecipeId(recipe.id)?.let { webId -> webId in favIdSet } == true)
+            }
             val countriesExplored = savedRecipes.mapNotNull { it.country?.name }.toSet().size
             val savedCount = savedRecipes.size
+
+            android.util.Log.d("ProfileActivity", "Saved count: $savedCount, Countries: $countriesExplored")
 
             // Stats
             findViewById<TextView>(R.id.tvStatSaved).text = savedCount.toString()

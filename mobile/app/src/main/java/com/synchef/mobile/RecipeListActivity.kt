@@ -161,6 +161,15 @@ class RecipeListActivity : Activity() {
         }
     }
 
+    /**
+     * Refresh data whenever user returns to this activity (e.g. after saving recipe in RecipeDetailActivity)
+     * This ensures the favorite status and counts are always up-to-date
+     */
+    override fun onResume() {
+        super.onResume()
+        loadRecipes()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         screenJob.cancel()
