@@ -7,59 +7,54 @@
     android:orientation="horizontal"
     android:paddingHorizontal="8dp">
 
-    <TextView
+    <ImageView
         android:id="@+id/navHome"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="⌂"
-        android:textColor="@color/synchef_orange"
-        android:textSize="26sp"
-        android:textStyle="bold" />
+        android:padding="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_home"
+        android:tint="@color/synchef_orange" />
 
-    <TextView
+    <ImageView
         android:id="@+id/navFlavor"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="◉"
-        android:textColor="@color/synchef_orange"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:padding="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_flavor"
+        android:tint="@color/synchef_orange" />
 
-    <TextView
+    <ImageView
         android:id="@+id/navSynCook"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="⌬"
-        android:textColor="@color/synchef_orange"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:padding="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_syncook"
+        android:tint="@color/synchef_orange" />
 
-    <TextView
+    <ImageView
         android:id="@+id/navProfile"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="◌"
-        android:textColor="@color/synchef_orange"
-        android:textSize="25sp"
-        android:textStyle="bold" />
+        android:padding="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_profile"
+        android:tint="@color/synchef_orange" />
 
-    <TextView
+    <ImageView
         android:id="@+id/navSettings"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="center"
-        android:text="⚙"
-        android:textColor="@color/synchef_orange"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:padding="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_settings"
+        android:tint="@color/synchef_orange" />
 
 </LinearLayout>
