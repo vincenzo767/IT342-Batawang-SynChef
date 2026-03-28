@@ -7,6 +7,7 @@ class RecipeRepository {
     private val api = ApiClient.recipeApi
     private val userApi = ApiClient.userApi
     private val countryApi = ApiClient.countryApi
+    private val synCookApi = ApiClient.synCookApi
 
     suspend fun getAllRecipes(): Result<List<RecipeListItem>> = safeCall {
         val response = api.getAllRecipes()
@@ -84,6 +85,47 @@ class RecipeRepository {
         val response = countryApi.getCountriesGroupedByContinent()
         if (response.isSuccessful) response.body() ?: emptyMap()
         else throw Exception("Failed to load countries (${response.code()})")
+    }
+
+    suspend fun getPublicSynCookRecipes(): Result<List<SynCookRecipe>> = safeCall {
+        val response = synCookApi.getPublicRecipes()
+        if (response.isSuccessful) response.body() ?: emptyList()
+        else throw Exception("Failed to load SynCook recipes (${response.code()})")
+    }
+
+    suspend fun getMySynCookRecipes(): Result<List<SynCookRecipe>> = safeCall {
+        val response = synCookApi.getMyRecipes()
+        if (response.isSuccessful) response.body() ?: emptyList()
+        else throw Exception("Failed to load your SynCook recipes (${response.code()})")
+    }
+
+    suspend fun getSynCookRecipeById(id: Long): Result<SynCookRecipe> = safeCall {
+        val response = synCookApi.getById(id)
+        if (response.isSuccessful) response.body() ?: throw Exception("SynCook recipe not found")
+        else throw Exception("Failed to load recipe (${response.code()})")
+    }
+
+    suspend fun createSynCookRecipe(payload: SynCookRecipePayload): Result<SynCookRecipe> = safeCall {
+        val response = synCookApi.create(payload)
+        if (response.isSuccessful) response.body() ?: throw Exception("Failed to create recipe")
+        else throw Exception("Failed to create recipe (${response.code()})")
+    }
+
+    suspend fun updateSynCookRecipe(id: Long, payload: SynCookRecipePayload): Result<SynCookRecipe> = safeCall {
+        val response = synCookApi.update(id, payload)
+        if (response.isSuccessful) response.body() ?: throw Exception("Failed to update recipe")
+        else throw Exception("Failed to update recipe (${response.code()})")
+    }
+
+    suspend fun deleteSynCookRecipe(id: Long): Result<Unit> = safeCall {
+        val response = synCookApi.delete(id)
+        if (!response.isSuccessful) throw Exception("Failed to delete recipe (${response.code()})")
+    }
+
+    suspend fun addSynCookComment(id: Long, content: String): Result<SynCookComment> = safeCall {
+        val response = synCookApi.addComment(id, SynCookCommentPayload(content))
+        if (response.isSuccessful) response.body() ?: throw Exception("Failed to add comment")
+        else throw Exception("Failed to add comment (${response.code()})")
     }
 
     fun getMergedRecipesWithWebFallback(serverRecipes: List<RecipeListItem>): List<RecipeListItem> {

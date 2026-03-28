@@ -25,6 +25,9 @@
             android:name=".FlavorMapActivity"
             android:exported="false" />
         <activity
+            android:name=".SynCookActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
         <activity

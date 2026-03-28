@@ -19,6 +19,17 @@ export const recipeApi = {
   getTimerSequence: (id) => apiClient.get(`/recipes/${id}/timer-sequence`)
 };
 
+export const synCookApi = {
+  getPublic: () => apiClient.get("/syncook/public"),
+  getMine: () => apiClient.get("/syncook/mine"),
+  getById: (id) => apiClient.get(`/syncook/${id}`),
+  create: (payload) => apiClient.post("/syncook", payload),
+  update: (id, payload) => apiClient.put(`/syncook/${id}`, payload),
+  remove: (id) => apiClient.delete(`/syncook/${id}`),
+  getComments: (id) => apiClient.get(`/syncook/${id}/comments`),
+  addComment: (id, content) => apiClient.post(`/syncook/${id}/comments`, { content })
+};
+
 export const userApi = {
   /** GET /api/users/me — full profile including countryCode, favoriteRecipeIds */
   getMe: () => apiClient.get("/users/me"),

@@ -244,6 +244,323 @@
   color: #4b5563;
 }
 
+.syncook-shell {
+  background: #1d2636;
+  border-radius: 12px;
+  padding: 18px;
+  color: #f5f6fb;
+}
+
+.syncook-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.syncook-header h3 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.syncook-header p {
+  margin: 6px 0 0;
+  color: #bac2d8;
+  font-size: 0.92rem;
+}
+
+.syncook-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.syncook-action-btn {
+  border: none;
+  border-radius: 8px;
+  background: #ffd11a;
+  color: #222;
+  font-weight: 700;
+  padding: 9px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.syncook-toolbar {
+  margin-top: 14px;
+}
+
+.syncook-toolbar input {
+  width: 100%;
+  max-width: 320px;
+  border: 1px solid #47546d;
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #11192a;
+  color: #fff;
+}
+
+.syncook-status {
+  margin: 14px 0;
+  color: #d8e0ff;
+}
+
+.syncook-status-error {
+  color: #ffc7c7;
+}
+
+.syncook-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.syncook-card {
+  border-radius: 10px;
+  background: #101725;
+  overflow: hidden;
+  border: 1px solid #2f3b53;
+}
+
+.syncook-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.syncook-card-body {
+  padding: 12px;
+}
+
+.syncook-card-body h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.syncook-card-body p {
+  margin: 6px 0 10px;
+  color: #a7b5d6;
+  font-size: 0.84rem;
+}
+
+.syncook-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.syncook-card-footer span {
+  color: #dce5ff;
+  font-size: 0.8rem;
+}
+
+.syncook-card-footer button {
+  border: none;
+  background: none;
+  color: #b389ff;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.syncook-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 14, 24, 0.72);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 1400;
+  overflow-y: auto;
+  padding: 96px 18px 18px;
+}
+
+.syncook-modal {
+  width: min(900px, 100%);
+  max-height: calc(100vh - 114px);
+  overflow: auto;
+  background: #eef2ff;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.syncook-modal h3 {
+  margin: 0 0 12px;
+}
+
+.syncook-form {
+  display: grid;
+  gap: 10px;
+}
+
+.syncook-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  color: #2a3354;
+}
+
+.syncook-form input,
+.syncook-form textarea,
+.syncook-form select {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.syncook-form-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.syncook-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.syncook-modal-actions button,
+.syncook-owner-actions button,
+.syncook-manage-actions button,
+.syncook-comment-box button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #4f46e5;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.syncook-modal-actions button:last-child,
+.syncook-owner-actions button:last-child,
+.syncook-manage-actions button:last-child {
+  background: #be123c;
+}
+
+.syncook-manage-subtitle {
+  margin: -4px 0 12px;
+  color: #52608e;
+}
+
+.syncook-manage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.syncook-manage-item {
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.syncook-manage-item img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.syncook-manage-item > div {
+  padding: 10px;
+}
+
+.syncook-manage-item h4 {
+  margin: 0;
+}
+
+.syncook-manage-item p {
+  margin: 4px 0 0;
+  color: #546184;
+  font-size: 0.84rem;
+}
+
+.syncook-manage-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.syncook-detail-meta {
+  margin: -4px 0 10px;
+  color: #52608e;
+}
+
+.syncook-detail-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.syncook-detail-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.syncook-detail-sections h4,
+.syncook-comments h4 {
+  margin: 0 0 8px;
+}
+
+.syncook-detail-sections ul,
+.syncook-detail-sections ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.syncook-comments {
+  margin-top: 16px;
+}
+
+.syncook-comment-list {
+  display: grid;
+  gap: 8px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.syncook-comment-list article {
+  border: 1px solid #d1d9ff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.syncook-comment-list p {
+  margin: 4px 0 0;
+}
+
+.syncook-comment-box {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.syncook-comment-box textarea {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.syncook-owner-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
 @media (max-width: 1100px) {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -258,6 +575,17 @@
   .discovered-grid {
     grid-template-columns: 1fr;
   }
+
+  .syncook-grid,
+  .syncook-manage-grid,
+  .syncook-detail-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .syncook-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 640px) {
@@ -271,5 +599,18 @@
 
   .flavor-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .syncook-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .syncook-modal-backdrop {
+    padding: 84px 10px 10px;
+  }
+
+  .syncook-modal {
+    max-height: calc(100vh - 94px);
+    padding: 14px;
   }
 }

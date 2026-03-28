@@ -8,18 +8,21 @@ object BottomNavHelper {
 
     const val TAB_HOME = "home"
     const val TAB_FLAVOR = "flavor"
+    const val TAB_SYNCOOK = "syncook"
     const val TAB_PROFILE = "profile"
     const val TAB_SETTINGS = "settings"
 
     fun setup(activity: Activity, selectedTab: String) {
         val home = activity.findViewById<TextView>(R.id.navHome)
         val flavor = activity.findViewById<TextView>(R.id.navFlavor)
+        val synCook = activity.findViewById<TextView>(R.id.navSynCook)
         val profile = activity.findViewById<TextView>(R.id.navProfile)
         val settings = activity.findViewById<TextView>(R.id.navSettings)
 
         val tabs = mapOf(
             home to TAB_HOME,
             flavor to TAB_FLAVOR,
+            synCook to TAB_SYNCOOK,
             profile to TAB_PROFILE,
             settings to TAB_SETTINGS
         )
@@ -40,6 +43,13 @@ object BottomNavHelper {
         flavor.setOnClickListener {
             if (selectedTab != TAB_FLAVOR) {
                 activity.startActivity(Intent(activity, FlavorMapActivity::class.java))
+                activity.finish()
+            }
+        }
+
+        synCook.setOnClickListener {
+            if (selectedTab != TAB_SYNCOOK) {
+                activity.startActivity(Intent(activity, SynCookActivity::class.java))
                 activity.finish()
             }
         }

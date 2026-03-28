@@ -101,3 +101,41 @@ data class UpdateCountryRequest(
     val countryCode: String,
     val countryName: String
 )
+
+data class SynCookRecipe(
+    val id: Long,
+    val title: String,
+    val country: String,
+    val ingredients: List<String> = emptyList(),
+    val procedures: List<String> = emptyList(),
+    val imageUrl: String? = null,
+    val privacy: String = "PUBLIC",
+    val ownerId: Long,
+    val ownerName: String,
+    val canEdit: Boolean = false,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val commentCount: Long = 0,
+    val comments: List<SynCookComment> = emptyList()
+)
+
+data class SynCookComment(
+    val id: Long,
+    val authorId: Long,
+    val authorName: String,
+    val content: String,
+    val createdAt: String? = null
+)
+
+data class SynCookRecipePayload(
+    val title: String,
+    val country: String,
+    val ingredients: List<String>,
+    val procedures: List<String>,
+    val imageUrl: String?,
+    val privacy: String
+)
+
+data class SynCookCommentPayload(
+    val content: String
+)

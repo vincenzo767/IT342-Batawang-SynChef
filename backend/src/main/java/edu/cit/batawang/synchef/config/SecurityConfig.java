@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * Spring Security configuration.
  * - Public: /api/auth/**, /api/recipes/**, /api/countries/**, /api/ai/**, /h2-console/**
- * - Authenticated: /api/users/**
+ * - Authenticated: /api/users/**, /api/syncook/**
  */
 @Configuration
 @EnableWebSecurity
@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/syncook/**").authenticated()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

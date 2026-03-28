@@ -49,3 +49,27 @@ interface UserApi {
     @PUT("users/me/country")
     suspend fun updateCountry(@Body request: UpdateCountryRequest): Response<Void>
 }
+
+interface SynCookApi {
+
+    @GET("syncook/public")
+    suspend fun getPublicRecipes(): Response<List<SynCookRecipe>>
+
+    @GET("syncook/mine")
+    suspend fun getMyRecipes(): Response<List<SynCookRecipe>>
+
+    @GET("syncook/{id}")
+    suspend fun getById(@Path("id") id: Long): Response<SynCookRecipe>
+
+    @POST("syncook")
+    suspend fun create(@Body payload: SynCookRecipePayload): Response<SynCookRecipe>
+
+    @PUT("syncook/{id}")
+    suspend fun update(@Path("id") id: Long, @Body payload: SynCookRecipePayload): Response<SynCookRecipe>
+
+    @DELETE("syncook/{id}")
+    suspend fun delete(@Path("id") id: Long): Response<Unit>
+
+    @POST("syncook/{id}/comments")
+    suspend fun addComment(@Path("id") id: Long, @Body payload: SynCookCommentPayload): Response<SynCookComment>
+}

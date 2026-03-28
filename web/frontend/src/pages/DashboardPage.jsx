@@ -1,7 +1,18 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { FaBookmark, FaCheckCircle, FaClock, FaGlobe, FaStar, FaUtensils } from "react-icons/fa";
+import {
+  FaBookmark,
+  FaCheckCircle,
+  FaClock,
+  FaEdit,
+  FaGlobe,
+  FaPaperPlane,
+  FaPlus,
+  FaStar,
+  FaTrash
+} from "react-icons/fa";
+import { synCookApi } from "../api";
 import { ALL_RECIPES } from "../data/recipes";
 import "./DashboardPage.css";
 
@@ -31,6 +42,42 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { user, favoriteRecipeIds } = useSelector((state) => state.auth);
   const firstName = user?.fullName?.split(" ")[0] || "Chef";
+  const userId = user?.id;
+
+  const [publicRecipes, setPublicRecipes] = useState([]);
+  const [myRecipes, setMyRecipes] = useState([]);
+  const [synCookLoading, setSynCookLoading] = useState(true);
+  const [synCookError, setSynCookError] = useState("");
+
+  const [filterKeyword, setFilterKeyword] = useState("");
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [detailRecipe, setDetailRecipe] = useState(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [editingRecipeId, setEditingRecipeId] = useState(null);
+
+  const [form, setForm] = useState({
+    title: "",
+    country: "",
+    ingredientsText: "",
+    proceduresText: "",
+    privacy: "PUBLIC",
+    imageUrl: ""
+  });
+
+  const defaultDishImage = "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&q=80";
+
+  const safeImageSrc = (value) => {
+    const image = (value || "").trim();
+    if (!image) return defaultDishImage;
+    if (image.startsWith("data:image/")) {
+      return image.includes(";base64,") ? image : defaultDishImage;
+    }
+    return image;
+  };
 
   // Resolve user country — backend (Redux) is the source of truth; localStorage is a fallback
   const userCountry = useMemo(() => {
@@ -88,14 +135,141 @@ const DashboardPage = () => {
     { label: "Cooking Time", value: "0h", tone: "orange", icon: <FaClock /> }
   ];
 
-  const flavorRegions = [
-    { emoji: "🌏", name: "Asia", tone: "blue" },
-    { emoji: "🌍", name: "Africa", tone: "yellow" },
-    { emoji: "🌎", name: "North America", tone: "green" },
-    { emoji: "🌎", name: "South America", tone: "orange" },
-    { emoji: "🌍", name: "Europe", tone: "purple" },
-    { emoji: "🌏", name: "Oceania", tone: "teal" }
-  ];
+  const filteredPublicRecipes = useMemo(() => {
+    const keyword = filterKeyword.trim().toLowerCase();
+    if (!keyword) return publicRecipes;
+    return publicRecipes.filter((recipe) => {
+      return (
+        recipe.title?.toLowerCase().includes(keyword) ||
+        recipe.country?.toLowerCase().includes(keyword) ||
+        recipe.ownerName?.toLowerCase().includes(keyword)
+      );
+    });
+  }, [publicRecipes, filterKeyword]);
+
+  const resetForm = () => {
+    setEditingRecipeId(null);
+    setForm({
+      title: "",
+      country: "",
+      ingredientsText: "",
+      proceduresText: "",
+      privacy: "PUBLIC",
+      imageUrl: ""
+    });
+  };
+
+  const mapFormToPayload = () => ({
+    title: form.title.trim(),
+    country: form.country.trim(),
+    privacy: form.privacy,
+    imageUrl: form.imageUrl.trim() || null,
+    ingredients: form.ingredientsText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean),
+    procedures: form.proceduresText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+  });
+
+  const seedFormFromRecipe = (recipe) => {
+    setEditingRecipeId(recipe.id);
+    setForm({
+      title: recipe.title || "",
+      country: recipe.country || "",
+      privacy: recipe.privacy || "PUBLIC",
+      imageUrl: recipe.imageUrl || "",
+      ingredientsText: (recipe.ingredients || []).join("\n"),
+      proceduresText: (recipe.procedures || []).join("\n")
+    });
+    setShowCreateModal(true);
+    setShowManageModal(false);
+  };
+
+  const loadSynCook = async () => {
+    setSynCookLoading(true);
+    setSynCookError("");
+    try {
+      const [publicRes, myRes] = await Promise.all([synCookApi.getPublic(), synCookApi.getMine()]);
+      setPublicRecipes(publicRes.data || []);
+      setMyRecipes(myRes.data || []);
+    } catch (error) {
+      setSynCookError(error?.response?.data?.message || "Could not load SynCook recipes.");
+    } finally {
+      setSynCookLoading(false);
+    }
+  };
+
+  const openRecipeDetail = async (recipeId) => {
+    try {
+      const res = await synCookApi.getById(recipeId);
+      setDetailRecipe(res.data);
+    } catch (error) {
+      setSynCookError(error?.response?.data?.message || "Could not open recipe.");
+    }
+  };
+
+  const submitRecipe = async (event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSynCookError("");
+    try {
+      const payload = mapFormToPayload();
+      if (editingRecipeId) {
+        await synCookApi.update(editingRecipeId, payload);
+      } else {
+        await synCookApi.create(payload);
+      }
+      setShowCreateModal(false);
+      resetForm();
+      await loadSynCook();
+    } catch (error) {
+      setSynCookError(error?.response?.data?.message || "Could not save recipe.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (recipeId) => {
+    const confirmed = globalThis.confirm("Delete this dish permanently?");
+    if (!confirmed) return;
+    try {
+      await synCookApi.remove(recipeId);
+      if (detailRecipe?.id === recipeId) setDetailRecipe(null);
+      await loadSynCook();
+    } catch (error) {
+      setSynCookError(error?.response?.data?.message || "Could not delete recipe.");
+    }
+  };
+
+  const submitComment = async () => {
+    if (!detailRecipe?.id || !commentDraft.trim()) return;
+    try {
+      await synCookApi.addComment(detailRecipe.id, commentDraft.trim());
+      setCommentDraft("");
+      await openRecipeDetail(detailRecipe.id);
+      await loadSynCook();
+    } catch (error) {
+      setSynCookError(error?.response?.data?.message || "Could not send comment.");
+    }
+  };
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      setForm((prev) => ({ ...prev, imageUrl: result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    loadSynCook();
+  }, []);
 
   return (
     <div className="dashboard-page">
@@ -162,47 +336,252 @@ const DashboardPage = () => {
           </div>
         </section>
 
-        {/* Quick Actions */}
-        <section className="dashboard-card" style={{ padding: "24px 28px" }}>
-          <h3 style={{ marginTop: 0 }}>Quick Actions</h3>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button
-              className="flavor-tile tone-bg-purple"
-              style={{ borderRadius: 12, padding: "12px 20px", border: "none", cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}
-              onClick={() => navigate("/")}
-            >
-              <FaUtensils /> Browse Recipes
-            </button>
-            <button
-              className="flavor-tile tone-bg-indigo"
-              style={{ borderRadius: 12, padding: "12px 20px", border: "none", cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}
-              onClick={() => navigate("/flavor-map")}
-            >
-              <FaGlobe /> Explore Flavor Map
-            </button>
-          </div>
-        </section>
-
-        {/* Global Flavor Map tiles */}
-        <section className="dashboard-card flavor-card">
-          <h3>Global Flavor Map</h3>
-          <p>Explore recipes by continent — Click a region to discover more</p>
-          <div className="flavor-grid">
-            {flavorRegions.map((region) => (
+        <section className="syncook-shell">
+          <div className="syncook-header">
+            <div>
+              <h3>Let&apos;s SynCook!</h3>
+              <p>Explore local recipes from the SynCook community</p>
+            </div>
+            <div className="syncook-actions">
               <button
-                key={region.name}
                 type="button"
-                className={`flavor-tile tone-bg-${region.tone}`}
-                onClick={() => navigate("/flavor-map")}
+                className="syncook-action-btn"
+                onClick={() => {
+                  resetForm();
+                  setShowCreateModal(true);
+                }}
               >
-                <div className="emoji">{region.emoji}</div>
-                <h4>{region.name}</h4>
-                <span>{ALL_RECIPES.filter((r) => r.region === region.name).length} recipes</span>
+                <FaPlus /> Create
               </button>
+              <button
+                type="button"
+                className="syncook-action-btn"
+                onClick={() => setShowManageModal(true)}
+              >
+                Manage
+              </button>
+            </div>
+          </div>
+
+          <div className="syncook-toolbar">
+            <input
+              type="text"
+              placeholder="Search by dish, country, or chef"
+              value={filterKeyword}
+              onChange={(event) => setFilterKeyword(event.target.value)}
+            />
+          </div>
+
+          {synCookLoading && <p className="syncook-status">Loading SynCook dishes...</p>}
+          {!synCookLoading && synCookError && <p className="syncook-status syncook-status-error">{synCookError}</p>}
+
+          <div className="syncook-grid">
+            {filteredPublicRecipes.map((recipe) => (
+              <article key={recipe.id} className="syncook-card">
+                <img
+                  src={safeImageSrc(recipe.imageUrl)}
+                  alt={recipe.title}
+                />
+                <div className="syncook-card-body">
+                  <h4>{recipe.title}</h4>
+                  <p>{recipe.country} • by {recipe.ownerName}</p>
+                  <div className="syncook-card-footer">
+                    <span>{recipe.commentCount || 0} comments</span>
+                    <button type="button" onClick={() => openRecipeDetail(recipe.id)}>
+                      View Recipe →
+                    </button>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </section>
       </div>
+
+      {(showCreateModal || showManageModal || detailRecipe) && (
+        <div className="syncook-modal-backdrop">
+          {showCreateModal && (
+            <div className="syncook-modal">
+              <h3>{editingRecipeId ? "Edit SynCook Dish" : "Create SynCook Dish"}</h3>
+              <form onSubmit={submitRecipe} className="syncook-form">
+                <label>
+                  <span>Dish Name</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Country</span>
+                  <input
+                    value={form.country}
+                    onChange={(event) => setForm((prev) => ({ ...prev, country: event.target.value }))}
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Ingredients (one per line)</span>
+                  <textarea
+                    rows={4}
+                    value={form.ingredientsText}
+                    onChange={(event) => setForm((prev) => ({ ...prev, ingredientsText: event.target.value }))}
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Procedures (one per line)</span>
+                  <textarea
+                    rows={5}
+                    value={form.proceduresText}
+                    onChange={(event) => setForm((prev) => ({ ...prev, proceduresText: event.target.value }))}
+                    required
+                  />
+                </label>
+
+                <div className="syncook-form-row">
+                  <label>
+                    <span>Privacy</span>
+                    <select
+                      value={form.privacy}
+                      onChange={(event) => setForm((prev) => ({ ...prev, privacy: event.target.value }))}
+                    >
+                      <option value="PUBLIC">Public</option>
+                      <option value="PRIVATE">Private</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Upload Image</span>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                </div>
+
+                <label>
+                  <span>Image URL (optional)</span>
+                  <input
+                    value={form.imageUrl}
+                    onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                  />
+                </label>
+
+                {!!synCookError && (
+                  <p className="syncook-status syncook-status-error" style={{ margin: 0 }}>
+                    {synCookError}
+                  </p>
+                )}
+
+                <div className="syncook-modal-actions">
+                  <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Upload"}
+                  </button>
+                  <button type="button" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {showManageModal && (
+            <div className="syncook-modal">
+              <h3>Personal Collection</h3>
+              <p className="syncook-manage-subtitle">Uploaded: {myRecipes.length}</p>
+              <div className="syncook-manage-grid">
+                {myRecipes.map((recipe) => (
+                  <article key={recipe.id} className="syncook-manage-item">
+                    <img
+                      src={safeImageSrc(recipe.imageUrl)}
+                      alt={recipe.title}
+                    />
+                    <div>
+                      <h4>{recipe.title}</h4>
+                      <p>{recipe.country} • {recipe.privacy}</p>
+                    </div>
+                    <div className="syncook-manage-actions">
+                      <button type="button" onClick={() => seedFormFromRecipe(recipe)}><FaEdit /> Edit</button>
+                      <button type="button" onClick={() => handleDelete(recipe.id)}><FaTrash /> Delete</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="syncook-modal-actions">
+                <button type="button" onClick={() => setShowManageModal(false)}>Close</button>
+              </div>
+            </div>
+          )}
+
+          {detailRecipe && (
+            <div className="syncook-modal">
+              <h3>{detailRecipe.title}</h3>
+              <p className="syncook-detail-meta">
+                {detailRecipe.country} • by {detailRecipe.ownerName}
+              </p>
+              {detailRecipe.imageUrl && (
+                <img className="syncook-detail-image" src={safeImageSrc(detailRecipe.imageUrl)} alt={detailRecipe.title} />
+              )}
+
+              <div className="syncook-detail-sections">
+                <div>
+                  <h4>Ingredients</h4>
+                  <ul>
+                    {(detailRecipe.ingredients || []).map((item, index) => (
+                      <li key={`${item}-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4>Procedures</h4>
+                  <ol>
+                    {(detailRecipe.procedures || []).map((item, index) => (
+                      <li key={`${item}-${index}`}>{item}</li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+
+              <div className="syncook-comments">
+                <h4>Comments / Feedback</h4>
+                <div className="syncook-comment-list">
+                  {(detailRecipe.comments || []).map((comment) => (
+                    <article key={comment.id}>
+                      <strong>{comment.authorName}</strong>
+                      <p>{comment.content}</p>
+                    </article>
+                  ))}
+                </div>
+                <div className="syncook-comment-box">
+                  <textarea
+                    rows={3}
+                    value={commentDraft}
+                    onChange={(event) => setCommentDraft(event.target.value)}
+                    placeholder="Leave feedback"
+                  />
+                  <button type="button" onClick={submitComment}>
+                    <FaPaperPlane /> Send
+                  </button>
+                </div>
+              </div>
+
+              {detailRecipe.canEdit && detailRecipe.ownerId === userId && (
+                <div className="syncook-owner-actions">
+                  <button type="button" onClick={() => seedFormFromRecipe(detailRecipe)}>
+                    <FaEdit /> Edit This Recipe
+                  </button>
+                  <button type="button" onClick={() => handleDelete(detailRecipe.id)}>
+                    <FaTrash /> Delete
+                  </button>
+                </div>
+              )}
+
+              <div className="syncook-modal-actions">
+                <button type="button" onClick={() => setDetailRecipe(null)}>Close</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

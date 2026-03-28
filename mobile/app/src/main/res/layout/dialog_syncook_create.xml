@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <EditText
+            android:id="@+id/etCreateDishName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Name of dish"
+            android:inputType="textCapWords" />
+
+        <EditText
+            android:id="@+id/etCreateCountry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Country"
+            android:inputType="textCapWords" />
+
+        <EditText
+            android:id="@+id/etCreateIngredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="top"
+            android:hint="Ingredients (one per line)"
+            android:inputType="textMultiLine"
+            android:minLines="4" />
+
+        <EditText
+            android:id="@+id/etCreateProcedures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="top"
+            android:hint="Procedures (one per line)"
+            android:inputType="textMultiLine"
+            android:minLines="5" />
+
+        <RadioGroup
+            android:id="@+id/rgCreatePrivacy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rbCreatePublic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Public" />
+
+            <RadioButton
+                android:id="@+id/rbCreatePrivate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:text="Private" />
+
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btnCreateUploadImage"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:text="Browse Files"
+            android:textAllCaps="false" />
+
+        <ImageView
+            android:id="@+id/imgCreatePreview"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="centerCrop"
+            android:src="@android:color/transparent" />
+
+        <EditText
+            android:id="@+id/etCreateImageUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Image URL or selected base64 image"
+            android:inputType="textUri" />
+
+    </LinearLayout>
+
+</ScrollView>
