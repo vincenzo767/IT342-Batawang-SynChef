@@ -381,6 +381,7 @@ const DashboardPage = () => {
                 <img
                   src={safeImageSrc(recipe.imageUrl)}
                   alt={recipe.title}
+                  onError={(e) => { e.currentTarget.src = defaultDishImage; }}
                 />
                 <div className="syncook-card-body">
                   <h4>{recipe.title}</h4>
@@ -494,6 +495,7 @@ const DashboardPage = () => {
                     <img
                       src={safeImageSrc(recipe.imageUrl)}
                       alt={recipe.title}
+                      onError={(e) => { e.currentTarget.src = defaultDishImage; }}
                     />
                     <div>
                       <h4>{recipe.title}</h4>
@@ -519,7 +521,7 @@ const DashboardPage = () => {
                 {detailRecipe.country} • by {detailRecipe.ownerName}
               </p>
               {detailRecipe.imageUrl && (
-                <img className="syncook-detail-image" src={safeImageSrc(detailRecipe.imageUrl)} alt={detailRecipe.title} />
+                <img className="syncook-detail-image" src={safeImageSrc(detailRecipe.imageUrl)} alt={detailRecipe.title} onError={(e) => { e.currentTarget.src = defaultDishImage; }} />
               )}
 
               <div className="syncook-detail-sections">
