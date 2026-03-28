@@ -151,7 +151,8 @@ class SynCookActivity : Activity() {
             etCountry.setText(recipe.country)
             etIngredients.setText(recipe.ingredients.joinToString("\n"))
             etProcedures.setText(recipe.procedures.joinToString("\n"))
-            etImageUrl.setText(recipe.imageUrl ?: "")
+            val existingImageUrl = recipe.imageUrl ?: ""
+            etImageUrl.setText(if (existingImageUrl.startsWith("data:", ignoreCase = true)) "" else existingImageUrl)
             if (recipe.privacy.equals("PRIVATE", ignoreCase = true)) {
                 rgPrivacy.check(R.id.rbCreatePrivate)
             } else {
