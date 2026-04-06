@@ -4,6 +4,34 @@
   flex-direction: column;
 }
 
+.app-routes {
+  flex: 1;
+  transition: margin-left 0.28s ease;
+}
+
+html[data-auth-nav="true"] .app-routes {
+  margin-left: 0;
+}
+
+html[data-auth-nav="true"][data-sidebar-open="true"] .app-routes {
+  margin-left: var(--auth-sidebar-width, 192px);
+}
+
+.app-route-shell {
+  animation: appRouteFade 0.26s ease;
+}
+
+@keyframes appRouteFade {
+  from {
+    opacity: 0.6;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .container {
   max-width: 1400px;
   margin: 0 auto;
@@ -117,6 +145,10 @@
 @media (max-width: 768px) {
   .grid-2, .grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .app-routes {
+    margin-left: 0 !important;
   }
   
   .page {

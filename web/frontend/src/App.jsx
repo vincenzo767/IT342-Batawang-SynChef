@@ -49,19 +49,23 @@ const App = () => {
   return (
     <div className="app">
       <Navigation />
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/flavor-map" element={<FlavorMapPage />} />
-          <Route path="/recipe/:id" element={<RecipeDetailPage />} />
-          <Route path="/cooking/:id" element={<CookingModePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-          <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-          <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-        </Routes>
-      </AnimatePresence>
+      <main className="app-routes">
+        <AnimatePresence mode="wait">
+          <div className="app-route-shell" key={location.pathname}>
+            <Routes location={location}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/flavor-map" element={<FlavorMapPage />} />
+              <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+              <Route path="/cooking/:id" element={<CookingModePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+              <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+              <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+            </Routes>
+          </div>
+        </AnimatePresence>
+      </main>
     </div>
   );
 };
