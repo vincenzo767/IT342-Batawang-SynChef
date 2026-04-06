@@ -614,3 +614,210 @@
     padding: 14px;
   }
 }
+
+/* Dark Theme Styles */
+:root[data-theme="dark"] .dashboard-page {
+  background: linear-gradient(to bottom, #1a1f2e, #1e2333);
+}
+
+:root[data-theme="dark"] .dashboard-shell {
+  /* Dashboard content inherits dark theme */
+}
+
+:root[data-theme="dark"] .dashboard-card {
+  background: #2d3142;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .welcome-card h2 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .welcome-card h2 span {
+  color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .welcome-card p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .welcome-country-tag {
+  background: #3d3558;
+  color: #cbd5e1;
+  border-color: #5b4d7d;
+}
+
+:root[data-theme="dark"] .discovered-header h3 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .stat-card p {
+  color: #a0aec0;
+  font-size: 0.82rem;
+}
+
+:root[data-theme="dark"] .stat-card h3 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .tone-purple {
+  color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .tone-indigo {
+  color: #6366f1;
+}
+
+:root[data-theme="dark"] .tone-green {
+  color: #22c55e;
+}
+
+:root[data-theme="dark"] .tone-orange {
+  color: #f97316;
+}
+
+:root[data-theme="dark"] .tone-bg-purple {
+  background: linear-gradient(135deg, #4c1d95, #6b21a8);
+}
+
+:root[data-theme="dark"] .tone-bg-indigo {
+  background: linear-gradient(135deg, #3730a3, #4338ca);
+}
+
+:root[data-theme="dark"] .tone-bg-green {
+  background: linear-gradient(135deg, #15803d, #166534);
+}
+
+:root[data-theme="dark"] .tone-bg-orange {
+  background: linear-gradient(135deg, #9a3412, #c2410c);
+}
+
+:root[data-theme="dark"] .tone-bg-blue {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+}
+
+:root[data-theme="dark"] .tone-bg-yellow {
+  background: linear-gradient(135deg, #8116d0, #7c3aed);
+}
+
+:root[data-theme="dark"] .tone-bg-teal {
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+}
+
+:root[data-theme="dark"] .discovered-card h3,
+:root[data-theme="dark"] .flavor-card h3 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .discover-item {
+  background: #2d3142;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .discover-item:hover {
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="dark"] .discover-body h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .discover-body p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .discover-body span {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .discover-body button {
+  color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .flavor-card > p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .flavor-tile {
+  background: #2d3142;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .flavor-tile h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .flavor-tile span {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .syncook-modal {
+  background: #2d3142;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .syncook-modal h3 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .syncook-form label {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .syncook-form input,
+:root[data-theme="dark"] .syncook-form textarea,
+:root[data-theme="dark"] .syncook-form select {
+  background: #1e2333;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .syncook-modal-actions button,
+:root[data-theme="dark"] .syncook-owner-actions button,
+:root[data-theme="dark"] .syncook-manage-actions button,
+:root[data-theme="dark"] .syncook-comment-box button {
+  background: #8b5cf6;
+}
+
+:root[data-theme="dark"] .syncook-modal-actions button:last-child,
+:root[data-theme="dark"] .syncook-owner-actions button:last-child,
+:root[data-theme="dark"] .syncook-manage-actions button:last-child {
+  background: #be123c;
+}
+
+:root[data-theme="dark"] .syncook-manage-subtitle {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .syncook-manage-item {
+  background: #2d3142;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .syncook-manage-item h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .syncook-manage-item p {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .syncook-detail-meta {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .syncook-comment-list article {
+  background: #2d3142;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .syncook-comment-list p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .syncook-comment-box textarea {
+  background: #1e2333;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+}

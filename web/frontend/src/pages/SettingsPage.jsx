@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, setUser } from "../store/authSlice";
@@ -106,11 +106,17 @@ const SettingsPage = () => {
   const [profilePublic, setProfilePublic] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [allowSharing, setAllowSharing] = useState(true);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(() => localStorage.getItem("appTheme") || "light");
   const [language, setLanguage] = useState("en");
   const [measurement, setMeasurement] = useState("metric");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+
+  // Persist theme to localStorage and apply to document root
+  useEffect(() => {
+    localStorage.setItem("appTheme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const username = user?.username || "chef";
   const emailVerified = user?.emailVerified || false;

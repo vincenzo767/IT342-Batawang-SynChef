@@ -331,3 +331,126 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Dark Theme Styles */
+:root[data-theme="dark"] .profile-page {
+  background: linear-gradient(to bottom, #1a1f2e, #1e2333);
+}
+
+:root[data-theme="dark"] .profile-header-card,
+:root[data-theme="dark"] .profile-panel {
+  background: #2d3142;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .profile-cover {
+  background: linear-gradient(90deg, #8b5cf6, #6366f1);
+}
+
+:root[data-theme="dark"] .profile-avatar {
+  background: #7c3aed;
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .profile-identity h2 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .profile-identity p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .profile-stats-grid h3 {
+  color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .profile-stats-grid p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .profile-panel h3 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .about-row {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .about-row svg {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .about-row span {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .achievement-badge {
+  background: #3d3558;
+  color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .achievements-list h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .achievements-list p {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .favorite-cuisines-grid button {
+  background: #2d3142;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .favorite-cuisines-grid button:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .favorite-cuisines-grid strong {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .favorite-cuisines-grid span {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .activity h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .activity p {
+  color: #a0aec0;
+}
+
+:root[data-theme="dark"] .activity.tone-purple {
+  border-left-color: #8b5cf6;
+}
+
+:root[data-theme="dark"] .activity.tone-indigo {
+  border-left-color: #6366f1;
+}
+
+:root[data-theme="dark"] .activity.tone-green {
+  border-left-color: #22c55e;
+}
+
+:root[data-theme="dark"] .activity.tone-orange {
+  border-left-color: #f97316;
+}
+
+:root[data-theme="dark"] .saved-recipe-card {
+  background: #2d3142;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .saved-recipe-card:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .saved-recipe-card h4 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .saved-recipe-card p {
+  color: #a0aec0;
+}
