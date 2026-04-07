@@ -1,6 +1,7 @@
 package com.synchef.mobile.data
 
 import android.content.Context
+import okhttp3.MultipartBody
 
 class RecipeRepository {
 
@@ -80,6 +81,12 @@ class RecipeRepository {
     suspend fun updateCountry(countryCode: String, countryName: String): Result<Unit> = safeCall {
         val response = userApi.updateCountry(UpdateCountryRequest(countryCode, countryName))
         if (!response.isSuccessful) throw Exception("Failed to update country (${response.code()})")
+    }
+
+    suspend fun uploadProfileImage(filePart: MultipartBody.Part): Result<UserProfile> = safeCall {
+        val response = userApi.uploadProfileImage(filePart)
+        if (response.isSuccessful) response.body() ?: throw Exception("Profile upload failed")
+        else throw Exception("Profile upload failed (${response.code()})")
     }
 
     suspend fun getCountriesGroupedByContinent(): Result<Map<String, List<CountryInfo>>> = safeCall {

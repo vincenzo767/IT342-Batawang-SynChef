@@ -2,17 +2,22 @@ package com.synchef.mobile
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.synchef.mobile.data.ApiClient
+import com.synchef.mobile.data.ImageUrlResolver
 import com.synchef.mobile.data.RecipeListItem
 import com.synchef.mobile.data.RecipeRepository
 import com.synchef.mobile.data.SessionManager
-import com.synchef.mobile.data.UserProfile
 import com.synchef.mobile.data.WebFallbackData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +25,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class ProfileActivity : Activity() {
 
@@ -30,6 +39,10 @@ class ProfileActivity : Activity() {
     // Background polling job for real-time sync
     private var pollJob: Job? = null
 
+    companion object {
+        private const val REQUEST_PICK_PROFILE_IMAGE = 9011
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
@@ -38,17 +51,15 @@ class ProfileActivity : Activity() {
         ApiClient.tokenProvider = { sessionManager.getToken() }
         val user = sessionManager.getUser()
 
-        // Avatar initials
-        val initials = user?.fullName
-            ?.split(" ")
-            ?.filter { it.isNotBlank() }
-            ?.take(2)
-            ?.joinToString("") { it.first().uppercaseChar().toString() }
-            ?: "?"
-        findViewById<TextView>(R.id.tvAvatar).text = initials
+        renderAvatar(user?.fullName, user?.profileImageUrl)
         findViewById<TextView>(R.id.tvFullName).text = user?.fullName ?: "—"
         findViewById<TextView>(R.id.tvEmail).text = user?.email ?: "—"
         findViewById<TextView>(R.id.tvUsername).text = "@${user?.username ?: "—"}"
+
+        findViewById<ImageButton>(R.id.btnUploadAvatar).setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
+            startActivityForResult(Intent.createChooser(intent, "Select profile photo"), REQUEST_PICK_PROFILE_IMAGE)
+        }
 
         val countryName = sessionManager.getUserCountry()
         val tvCountry = findViewById<TextView>(R.id.tvCountry)
@@ -93,11 +104,11 @@ class ProfileActivity : Activity() {
         // Cancel existing poll job if any
         stopPolling()
 
-        android.util.Log.d("ProfileActivity", "Starting polling every 15 seconds")
+        android.util.Log.d("ProfileActivity", "Starting polling every 5 seconds")
         // Start new polling job
         pollJob = uiScope.launch {
             while (true) {
-                delay(15000) // 15 seconds
+                delay(5000) // 5 seconds
                 android.util.Log.d("ProfileActivity", "Polling tick at ${System.currentTimeMillis()}")
                 loadProfileData()
             }
@@ -124,6 +135,7 @@ class ProfileActivity : Activity() {
                 findViewById<TextView>(R.id.tvFullName).text = profile.fullName ?: "—"
                 findViewById<TextView>(R.id.tvEmail).text = profile.email ?: "—"
                 findViewById<TextView>(R.id.tvUsername).text = "@${profile.username ?: "—"}"
+                renderAvatar(profile.fullName, profile.profileImageUrl)
                 if (!profile.countryName.isNullOrBlank()) {
                     val tvCountry = findViewById<TextView>(R.id.tvCountry)
                     tvCountry.text = "Country: ${profile.countryName}"
@@ -282,8 +294,69 @@ class ProfileActivity : Activity() {
         }
     }
 
+    private fun renderAvatar(fullName: String?, rawImageUrl: String?) {
+        val initials = fullName
+            ?.split(" ")
+            ?.filter { it.isNotBlank() }
+            ?.take(2)
+            ?.joinToString("") { it.first().uppercaseChar().toString() }
+            ?: "?"
+
+        val tvAvatarInitials = findViewById<TextView>(R.id.tvAvatarInitials)
+        val ivAvatar = findViewById<ImageView>(R.id.ivAvatar)
+        tvAvatarInitials.text = initials
+
+        val resolvedImageUrl = ImageUrlResolver.resolve(rawImageUrl)
+        if (resolvedImageUrl.isNullOrBlank()) {
+            ivAvatar.visibility = View.GONE
+            tvAvatarInitials.visibility = View.VISIBLE
+            return
+        }
+
+        tvAvatarInitials.visibility = View.GONE
+        ivAvatar.visibility = View.VISIBLE
+        Glide.with(this)
+            .load(resolvedImageUrl)
+            .circleCrop()
+            .into(ivAvatar)
+    }
+
+    private fun uploadProfileImage(uri: Uri) {
+        uiScope.launch {
+            runCatching {
+                val input = contentResolver.openInputStream(uri)
+                    ?: throw IllegalArgumentException("Unable to read selected image")
+                val tmpFile = File.createTempFile("profile_upload", ".tmp", cacheDir)
+                input.use { stream -> tmpFile.outputStream().use { out -> stream.copyTo(out) } }
+                val mime = contentResolver.getType(uri) ?: "image/jpeg"
+                val requestBody = tmpFile.asRequestBody(mime.toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("file", "profile-image", requestBody)
+            }.onSuccess { part ->
+                repository.uploadProfileImage(part)
+                    .onSuccess { profile ->
+                        SessionManager(this@ProfileActivity).updateUserProfile(profile)
+                        renderAvatar(profile.fullName, profile.profileImageUrl)
+                        Toast.makeText(this@ProfileActivity, "Profile photo updated", Toast.LENGTH_SHORT).show()
+                    }
+                    .onFailure {
+                        Toast.makeText(this@ProfileActivity, "Upload failed", Toast.LENGTH_SHORT).show()
+                    }
+            }.onFailure {
+                Toast.makeText(this@ProfileActivity, "Unable to process selected image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         screenJob.cancel()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_PICK_PROFILE_IMAGE && resultCode == RESULT_OK) {
+            data?.data?.let { uri -> uploadProfileImage(uri) }
+        }
     }
 }

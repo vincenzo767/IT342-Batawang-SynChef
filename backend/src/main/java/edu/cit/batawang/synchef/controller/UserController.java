@@ -4,11 +4,16 @@ import edu.cit.batawang.synchef.dto.AuthResponse;
 import edu.cit.batawang.synchef.dto.NotificationResponse;
 import edu.cit.batawang.synchef.model.User;
 import edu.cit.batawang.synchef.repository.UserRepository;
+import edu.cit.batawang.synchef.service.ProfileImageStorageService;
 import edu.cit.batawang.synchef.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -27,6 +32,8 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ProfileImageStorageService profileImageStorageService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -77,6 +84,10 @@ public class UserController {
         return r;
     }
 
+    private void publishProfileUpdate(User user) {
+        messagingTemplate.convertAndSend("/topic/user-profile/" + user.getId(), toProfile(user));
+    }
+
     // ── endpoints ─────────────────────────────────────────────────────────────
 
     /** GET /api/users/me — returns current user's full profile */
@@ -103,6 +114,7 @@ public class UserController {
         if (!user.getFavoriteRecipeIds().contains(recipeId)) {
             user.getFavoriteRecipeIds().add(recipeId);
             user = userRepository.save(user);
+            publishProfileUpdate(user);
         }
         return ResponseEntity.ok(user.getFavoriteRecipeIds());
     }
@@ -114,6 +126,7 @@ public class UserController {
         if (user.getFavoriteRecipeIds() != null) {
             user.getFavoriteRecipeIds().remove(recipeId);
             user = userRepository.save(user);
+            publishProfileUpdate(user);
         }
         return ResponseEntity.ok(user.getFavoriteRecipeIds() != null
                 ? user.getFavoriteRecipeIds() : new ArrayList<>());
@@ -128,11 +141,24 @@ public class UserController {
         String name = body.getOrDefault("countryName", "").trim();
         if (!code.isEmpty()) user.setCountryCode(code);
         if (!name.isEmpty()) user.setCountryName(name);
-        userRepository.save(user);
+        user = userRepository.save(user);
+        publishProfileUpdate(user);
         return ResponseEntity.ok(Map.of(
                 "countryCode", user.getCountryCode() != null ? user.getCountryCode() : "",
                 "countryName", user.getCountryName() != null ? user.getCountryName() : ""
         ));
+    }
+
+    /** POST /api/users/me/profile-image — upload and persist profile photo */
+    @PostMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AuthResponse> uploadProfileImage(@RequestParam("file") MultipartFile file) {
+        User user = getCurrentUser();
+        String imageUrl = profileImageStorageService.store(file, user.getId());
+        user.setProfileImageUrl(imageUrl);
+        user = userRepository.save(user);
+        AuthResponse profile = toProfile(user);
+        messagingTemplate.convertAndSend("/topic/user-profile/" + user.getId(), profile);
+        return ResponseEntity.ok(profile);
     }
 
     /** GET /api/users/me/notifications — returns current user's notifications */

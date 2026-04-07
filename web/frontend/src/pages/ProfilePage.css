@@ -38,6 +38,7 @@
   background: #ffffff;
   border-radius: 999px;
   padding: 6px;
+  position: relative;
 }
 
 .profile-avatar {
@@ -51,6 +52,32 @@
   color: #f8fafc;
   font-size: 2.1rem;
   font-weight: 800;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-upload {
+  position: absolute;
+  right: -12px;
+  bottom: -4px;
+  border: 0;
+  background: #4f46e5;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-avatar-upload:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .profile-identity {
@@ -220,6 +247,15 @@
 .activity {
   border-left: 4px solid;
   padding-left: 12px;
+  width: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .activity h4 {
@@ -352,6 +388,10 @@
   color: #f8fafc;
 }
 
+:root[data-theme="dark"] .profile-avatar-upload {
+  background: #6366f1;
+}
+
 :root[data-theme="dark"] .profile-identity h2 {
   color: #f8fafc;
 }
@@ -386,7 +426,7 @@
 
 :root[data-theme="dark"] .achievement-badge {
   background: #3d3558;
-  color: #8b5cf6;
+  color: #ddd6fe;
 }
 
 :root[data-theme="dark"] .achievements-list h4 {

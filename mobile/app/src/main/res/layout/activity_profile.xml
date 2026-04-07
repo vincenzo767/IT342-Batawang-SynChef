@@ -32,7 +32,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="SynChef"
+                    android:text="Profile"
                     android:textColor="#FFD06A"
                     android:textSize="30sp"
                     android:textStyle="bold" />
@@ -43,13 +43,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="8dp"
-                app:cardBackgroundColor="@color/white"
+                app:cardBackgroundColor="#F1F1F1"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:orientation="vertical">
 
                     <View
@@ -60,30 +62,66 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
-                        android:paddingTop="8dp">
+                        android:paddingTop="6dp"
+                        android:paddingBottom="2dp">
 
                         <TextView
                             android:id="@+id/tvAvatar"
-                            android:layout_width="78dp"
-                            android:layout_height="78dp"
-                            android:layout_marginTop="-42dp"
-                            android:background="@drawable/bg_avatar_circle"
-                            android:elevation="3dp"
-                            android:gravity="center"
-                            android:textColor="@color/synchef_primary"
-                            android:textSize="27sp"
-                            android:textStyle="bold" />
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:visibility="gone" />
+
+                        <FrameLayout
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:layout_marginTop="-38dp"
+                            android:elevation="3dp">
+
+                            <ImageView
+                                android:id="@+id/ivAvatar"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_circle"
+                                android:clipToOutline="true"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/tvAvatarInitials"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_circle"
+                                android:gravity="center"
+                                android:textColor="@color/synchef_primary"
+                                android:textSize="34sp"
+                                android:textStyle="bold" />
+
+                            <ImageButton
+                                android:id="@+id/btnUploadAvatar"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="end|bottom"
+                                android:layout_margin="2dp"
+                                android:background="@drawable/bg_avatar_circle"
+                                android:contentDescription="Upload profile picture"
+                                android:padding="6dp"
+                                android:src="@android:drawable/ic_menu_upload"
+                                android:tint="@color/synchef_primary" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:paddingStart="10dp"
-                            android:paddingTop="6dp"
+                            android:paddingStart="12dp"
+                            android:paddingTop="14dp"
                             android:paddingEnd="4dp">
 
                             <TextView
@@ -93,18 +131,35 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:textColor="@color/synchef_text_dark"
-                                android:textSize="28sp"
+                                android:textSize="18sp"
                                 android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvEmail"
+                            <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="1dp"
-                                android:maxLines="1"
-                                android:ellipsize="end"
-                                android:textColor="@color/synchef_text_light"
-                                android:textSize="10sp" />
+                                android:layout_marginTop="2dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:layout_marginEnd="6dp"
+                                    android:alpha="0.78"
+                                    android:src="@android:drawable/ic_menu_myplaces"
+                                    android:tint="@color/synchef_text_light" />
+
+                                <TextView
+                                    android:id="@+id/tvEmail"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:textColor="@color/synchef_text_light"
+                                    android:textSize="12sp" />
+
+                            </LinearLayout>
 
                         </LinearLayout>
 
@@ -132,7 +187,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textColor="@color/synchef_bg_bottom"
-                                android:textSize="27sp"
+                                android:textSize="36sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -141,7 +196,7 @@
                                 android:gravity="center"
                                 android:text="Saved\nRecipes"
                                 android:textColor="@color/synchef_text_light"
-                                android:textSize="10sp" />
+                                android:textSize="15sp" />
 
                         </LinearLayout>
 
@@ -158,7 +213,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textColor="@color/synchef_indigo"
-                                android:textSize="27sp"
+                                android:textSize="36sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -167,7 +222,7 @@
                                 android:gravity="center"
                                 android:text="Countries\nExplored"
                                 android:textColor="@color/synchef_text_light"
-                                android:textSize="10sp" />
+                                android:textSize="15sp" />
 
                         </LinearLayout>
 
@@ -184,7 +239,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textColor="@color/synchef_green"
-                                android:textSize="27sp"
+                                android:textSize="36sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -193,7 +248,7 @@
                                 android:gravity="center"
                                 android:text="Recipes\nTried"
                                 android:textColor="@color/synchef_text_light"
-                                android:textSize="10sp" />
+                                android:textSize="15sp" />
 
                         </LinearLayout>
 

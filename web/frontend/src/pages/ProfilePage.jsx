@@ -1,7 +1,8 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { FaCalendarAlt, FaMapMarkerAlt, FaBookmark, FaHeart } from "react-icons/fa";
+import { Client } from "@stomp/stompjs";
 import { ALL_RECIPES } from "../data/recipes";
 import { refreshUser } from "../store/authSlice";
 import { userApi, recipeApi } from "../api";
@@ -22,6 +23,63 @@ const ProfilePage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { user, favoriteRecipeIds, isAuthenticated } = useSelector((state) => state.auth);
+  const fileInputRef = useRef(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const profileImageUrl = useMemo(() => {
+    if (!user?.profileImageUrl) return "";
+    if (user.profileImageUrl.startsWith("http://") || user.profileImageUrl.startsWith("https://")) {
+      return user.profileImageUrl;
+    }
+    return user.profileImageUrl;
+  }, [user?.profileImageUrl]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return undefined;
+
+    let subscription = null;
+    const wsLocation = globalThis.location;
+    const client = new Client({
+      brokerURL: `${wsLocation?.protocol === "https:" ? "wss" : "ws"}://${wsLocation?.host}/ws-native`,
+      reconnectDelay: 5000,
+      onConnect: () => {
+        subscription = client.subscribe(`/topic/user-profile/${user.id}`, (frame) => {
+          try {
+            const payload = JSON.parse(frame.body);
+            dispatch(refreshUser(payload));
+          } catch {
+            // Ignore malformed payloads from stale clients.
+          }
+        });
+      }
+    });
+
+    client.activate();
+    return () => {
+      if (subscription) subscription.unsubscribe();
+      client.deactivate();
+    };
+  }, [isAuthenticated, user?.id, dispatch]);
+
+  const triggerImagePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleProfileImageChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const res = await userApi.uploadProfileImage(file);
+      dispatch(refreshUser(res.data));
+    } catch {
+      // Keep current image if upload fails.
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   // Fetch fresh user data whenever navigating to /profile
   useEffect(() => {
@@ -43,17 +101,11 @@ const ProfilePage = () => {
       console.log("[ProfilePage] Polling tick - fetching fresh data");
       userApi.getMe()
         .then((res) => {
-          console.log("[ProfilePage] Polling success - favorites:", res.data.favoriteRecipeIds);
           dispatch(refreshUser(res.data));
         })
-        .catch((err) => {
-          console.error("[ProfilePage] Polling failed:", err.message);
-        });
+        .catch(() => { /* keep cached profile on transient errors */ });
     }, 10000); // 10 seconds
-    return () => {
-      console.log("[ProfilePage] Stopping polling");
-      clearInterval(pollInterval);
-    };
+    return () => clearInterval(pollInterval);
   }, [isAuthenticated, dispatch]);
 
   // Refresh data when browser tab regains focus (user switches back from mobile)
@@ -96,9 +148,9 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const missingIds = (favoriteRecipeIds || []).filter((id) => {
-      if (ALL_RECIPES.find((r) => r.id === id)) return false;
+      if (ALL_RECIPES.some((r) => r.id === id)) return false;
       // Mobile fallback ID: id = FALLBACK_OFFSET + webRecipeId
-      if (id >= FALLBACK_OFFSET && ALL_RECIPES.find((r) => r.id === id - FALLBACK_OFFSET)) return false;
+      if (id >= FALLBACK_OFFSET && ALL_RECIPES.some((r) => r.id === id - FALLBACK_OFFSET)) return false;
       return true;
     });
     if (missingIds.length === 0) {
@@ -166,7 +218,7 @@ const ProfilePage = () => {
   const achievements = useMemo(() => {
     const list = [];
     if (savedCount >= 1) list.push({ badge: "⭐", title: "First Save", desc: "Saved your first recipe" });
-    if (savedCount >= 5) list.push({ badge: "🔥", title: "Recipe Collector", desc: "Saved 5+ recipes" });
+    if (savedCount > 4) list.push({ badge: "🔥", title: "Recipe Collector", desc: "Saved 5+ recipes" });
     if (savedCount >= 10) list.push({ badge: "🏆", title: "Culinary Explorer", desc: "Saved 10+ recipes" });
     if (userCountry) list.push({ badge: "🌍", title: "World Citizen", desc: `Cooking from ${userCountry.name}` });
     if (list.length === 0)
@@ -183,7 +235,28 @@ const ProfilePage = () => {
           <div className="profile-cover" />
           <div className="profile-header-content">
             <div className="profile-avatar-wrap">
-              <div className="profile-avatar">{initials}</div>
+              <div className="profile-avatar">
+                {profileImageUrl ? (
+                  <img src={profileImageUrl} alt={`${fullName} profile`} />
+                ) : (
+                  initials
+                )}
+              </div>
+              <button
+                type="button"
+                className="profile-avatar-upload"
+                onClick={triggerImagePicker}
+                disabled={isUploadingImage}
+              >
+                {isUploadingImage ? "Uploading..." : "Change Photo"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={handleProfileImageChange}
+                hidden
+              />
             </div>
             <div className="profile-identity">
               <h2>{fullName}</h2>
@@ -224,7 +297,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="about-row">
                   <FaBookmark />
-                  <span>{savedCount} saved recipe{savedCount !== 1 ? "s" : ""}</span>
+                    <span>{savedCount} saved recipe{savedCount === 1 ? "" : "s"}</span>
                 </div>
               </div>
             </section>
@@ -269,10 +342,10 @@ const ProfilePage = () => {
               {recentActivity.length > 0 ? (
                 <div className="activity-list">
                   {recentActivity.map((item) => (
-                    <article
+                    <button
                       key={item.id}
+                      type="button"
                       className="activity tone-purple"
-                      style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/recipe/${item.id}`)}
                     >
                       <h4>
@@ -280,7 +353,7 @@ const ProfilePage = () => {
                         {item.text}
                       </h4>
                       <p>{item.sub}</p>
-                    </article>
+                    </button>
                   ))}
                 </div>
               ) : (

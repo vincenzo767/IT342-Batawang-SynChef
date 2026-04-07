@@ -1,5 +1,6 @@
 package com.synchef.mobile.data
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -48,6 +49,10 @@ interface UserApi {
 
     @PUT("users/me/country")
     suspend fun updateCountry(@Body request: UpdateCountryRequest): Response<Void>
+
+    @Multipart
+    @POST("users/me/profile-image")
+    suspend fun uploadProfileImage(@Part file: MultipartBody.Part): Response<UserProfile>
 }
 
 interface SynCookApi {

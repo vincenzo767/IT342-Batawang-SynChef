@@ -45,7 +45,16 @@ export const userApi = {
 
   /** PUT /api/users/me/country — update stored country */
   updateCountry: (countryCode, countryName) =>
-    apiClient.put("/users/me/country", { countryCode, countryName })
+    apiClient.put("/users/me/country", { countryCode, countryName }),
+
+  /** POST /api/users/me/profile-image — upload profile photo */
+  uploadProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post("/users/me/profile-image", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+  }
 };
 
 export const notificationApi = {

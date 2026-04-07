@@ -13,6 +13,10 @@ var vite_config_default = defineConfig({
         target: "http://localhost:8080",
         ws: true,
         changeOrigin: true
+      },
+      "/uploads": {
+        target: "http://localhost:8080",
+        changeOrigin: true
       }
     }
   }
