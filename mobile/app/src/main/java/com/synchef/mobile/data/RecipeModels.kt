@@ -139,3 +139,20 @@ data class SynCookRecipePayload(
 data class SynCookCommentPayload(
     val content: String
 )
+
+data class AppNotification(
+    val id: Long,
+    val type: String,
+    val title: String,
+    val message: String,
+    val senderId: Long? = null,
+    val senderName: String? = null,
+    val referenceRecipeId: Long? = null,
+    val isRead: Boolean = false,
+    val isSystem: Boolean = false,
+    val createdAt: String? = null
+)
+
+data class UnreadCountResponse(
+    val unreadCount: Long = 0
+)

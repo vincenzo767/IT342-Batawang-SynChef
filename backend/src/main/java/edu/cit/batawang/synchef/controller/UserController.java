@@ -1,8 +1,10 @@
 package edu.cit.batawang.synchef.controller;
 
 import edu.cit.batawang.synchef.dto.AuthResponse;
+import edu.cit.batawang.synchef.dto.NotificationResponse;
 import edu.cit.batawang.synchef.model.User;
 import edu.cit.batawang.synchef.repository.UserRepository;
+import edu.cit.batawang.synchef.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -130,5 +133,35 @@ public class UserController {
                 "countryCode", user.getCountryCode() != null ? user.getCountryCode() : "",
                 "countryName", user.getCountryName() != null ? user.getCountryName() : ""
         ));
+    }
+
+    /** GET /api/users/me/notifications — returns current user's notifications */
+    @GetMapping("/me/notifications")
+    public ResponseEntity<java.util.List<NotificationResponse>> getNotifications(
+            @RequestParam(name = "unreadOnly", defaultValue = "false") boolean unreadOnly) {
+        User user = getCurrentUser();
+        return ResponseEntity.ok(notificationService.getNotifications(user.getId(), unreadOnly));
+    }
+
+    /** GET /api/users/me/notifications/unread-count — returns unread notification count */
+    @GetMapping("/me/notifications/unread-count")
+    public ResponseEntity<Map<String, Long>> unreadCount() {
+        User user = getCurrentUser();
+        return ResponseEntity.ok(Map.of("unreadCount", notificationService.unreadCount(user.getId())));
+    }
+
+    /** PATCH /api/users/me/notifications/{id}/read — mark a notification as read */
+    @PatchMapping("/me/notifications/{id}/read")
+    public ResponseEntity<NotificationResponse> markAsRead(@PathVariable Long id) {
+        User user = getCurrentUser();
+        return ResponseEntity.ok(notificationService.markAsRead(user.getId(), id));
+    }
+
+    /** POST /api/users/me/notifications/read-all — mark all notifications as read */
+    @PostMapping("/me/notifications/read-all")
+    public ResponseEntity<Map<String, Long>> markAllAsRead() {
+        User user = getCurrentUser();
+        long markedCount = notificationService.markAllAsRead(user.getId());
+        return ResponseEntity.ok(Map.of("markedCount", markedCount));
     }
 }

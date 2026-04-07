@@ -53,4 +53,5 @@ object ApiClient {
     val userApi: UserApi by lazy { retrofit.create(UserApi::class.java) }
     val countryApi: CountryApi by lazy { retrofit.create(CountryApi::class.java) }
     val synCookApi: SynCookApi by lazy { retrofit.create(SynCookApi::class.java) }
+    val notificationApi: NotificationApi by lazy { retrofit.create(NotificationApi::class.java) }
 }

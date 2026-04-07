@@ -10,6 +10,7 @@ import edu.cit.batawang.synchef.model.User;
 import edu.cit.batawang.synchef.repository.SynCookCommentRepository;
 import edu.cit.batawang.synchef.repository.SynCookRecipeRepository;
 import edu.cit.batawang.synchef.repository.UserRepository;
+import edu.cit.batawang.synchef.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ public class SynCookController {
     private final SynCookRecipeRepository recipeRepository;
     private final SynCookCommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @GetMapping("/public")
     public ResponseEntity<List<SynCookRecipeResponse>> getPublicRecipes() {
@@ -160,6 +162,7 @@ public class SynCookController {
         comment.setContent(content);
 
         SynCookComment saved = commentRepository.save(comment);
+        notificationService.createCommentNotification(recipe, user, content);
         return ResponseEntity.status(HttpStatus.CREATED).body(toCommentResponse(saved));
     }
 

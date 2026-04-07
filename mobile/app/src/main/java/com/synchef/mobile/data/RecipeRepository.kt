@@ -8,6 +8,7 @@ class RecipeRepository {
     private val userApi = ApiClient.userApi
     private val countryApi = ApiClient.countryApi
     private val synCookApi = ApiClient.synCookApi
+    private val notificationApi = ApiClient.notificationApi
 
     suspend fun getAllRecipes(): Result<List<RecipeListItem>> = safeCall {
         val response = api.getAllRecipes()
@@ -126,6 +127,29 @@ class RecipeRepository {
         val response = synCookApi.addComment(id, SynCookCommentPayload(content))
         if (response.isSuccessful) response.body() ?: throw Exception("Failed to add comment")
         else throw Exception("Failed to add comment (${response.code()})")
+    }
+
+    suspend fun getNotifications(unreadOnly: Boolean = false): Result<List<AppNotification>> = safeCall {
+        val response = notificationApi.getNotifications(unreadOnly)
+        if (response.isSuccessful) response.body() ?: emptyList()
+        else throw Exception("Failed to load notifications (${response.code()})")
+    }
+
+    suspend fun getUnreadNotificationCount(): Result<Long> = safeCall {
+        val response = notificationApi.getUnreadCount()
+        if (response.isSuccessful) response.body()?.unreadCount ?: 0L
+        else throw Exception("Failed to load unread notification count (${response.code()})")
+    }
+
+    suspend fun markNotificationAsRead(id: Long): Result<AppNotification> = safeCall {
+        val response = notificationApi.markAsRead(id)
+        if (response.isSuccessful) response.body() ?: throw Exception("Failed to mark as read")
+        else throw Exception("Failed to mark as read (${response.code()})")
+    }
+
+    suspend fun markAllNotificationsAsRead(): Result<Unit> = safeCall {
+        val response = notificationApi.markAllAsRead()
+        if (!response.isSuccessful) throw Exception("Failed to mark all as read (${response.code()})")
     }
 
     fun getMergedRecipesWithWebFallback(serverRecipes: List<RecipeListItem>): List<RecipeListItem> {

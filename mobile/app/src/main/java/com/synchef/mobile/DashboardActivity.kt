@@ -8,6 +8,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
 import com.synchef.mobile.data.ApiClient
@@ -53,15 +54,12 @@ class DashboardActivity : Activity() {
         // Init authenticated API
         ApiClient.tokenProvider = { sessionManager.getToken() }
 
-        findViewById<Button>(R.id.btnLogout).setOnClickListener {
-            sessionManager.clear()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finishAffinity()
+        findViewById<ImageButton>(R.id.btnNotification).setOnClickListener {
+            startActivity(Intent(this, NotificationActivity::class.java))
         }
 
-        val firstName = user.fullName?.split(" ")?.firstOrNull() ?: "Chef"
         findViewById<TextView>(R.id.tvWelcome).text = "Discover Global Flavors"
-        findViewById<TextView>(R.id.tvWelcomeSub).text = "Welcome, $firstName"
+        findViewById<TextView>(R.id.tvWelcomeSub).text = "Search authentic recipes from every corner of the world."
 
         tvStatus = findViewById(R.id.tvDashboardStatus)
         etSearch = findViewById(R.id.etDashboardSearch)
@@ -92,7 +90,9 @@ class DashboardActivity : Activity() {
         }
 
         BottomNavHelper.setup(this, BottomNavHelper.TAB_HOME)
-        
+
+        refreshNotificationBadge()
+
         // Refresh user profile and favorites from backend on app startup
         // This ensures mobile data is always in sync with backend
         refreshUserDataFromBackend()
@@ -135,9 +135,9 @@ class DashboardActivity : Activity() {
         super.onResume()
         refreshUserDataFromBackend()
 
-        // Start polling for changes every 20 seconds while DashboardActivity is visible
-        // This ensures real-time sync if web saves recipes
+        // Start polling for changes while DashboardActivity is visible.
         startPolling()
+        refreshNotificationBadge()
     }
 
     /**
@@ -152,13 +152,14 @@ class DashboardActivity : Activity() {
         // Cancel existing poll job if any
         stopPolling()
 
-        android.util.Log.d("DashboardActivity", "Starting polling every 20 seconds")
+        android.util.Log.d("DashboardActivity", "Starting polling every 3 seconds")
         // Start new polling job
         pollJob = uiScope.launch {
             while (true) {
-                delay(20000) // 20 seconds
+                delay(3000)
                 android.util.Log.d("DashboardActivity", "Polling tick at ${System.currentTimeMillis()}")
                 refreshUserDataFromBackend()
+                refreshNotificationBadge()
             }
         }
     }
@@ -251,6 +252,24 @@ class DashboardActivity : Activity() {
             tvStatus.visibility = View.GONE
         }
         adapter.updateRecipes(recipes)
+    }
+
+    private fun refreshNotificationBadge() {
+        val badge = findViewById<TextView>(R.id.tvNotificationBadge)
+        uiScope.launch {
+            repository.getUnreadNotificationCount()
+                .onSuccess { unreadCount ->
+                    if (unreadCount > 0) {
+                        badge.visibility = View.VISIBLE
+                        badge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+                    } else {
+                        badge.visibility = View.GONE
+                    }
+                }
+                .onFailure {
+                    badge.visibility = View.GONE
+                }
+        }
     }
 
     override fun onDestroy() {

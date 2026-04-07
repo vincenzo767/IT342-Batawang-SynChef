@@ -48,6 +48,13 @@ export const userApi = {
     apiClient.put("/users/me/country", { countryCode, countryName })
 };
 
+export const notificationApi = {
+  getMine: (unreadOnly = false) => apiClient.get(`/users/me/notifications?unreadOnly=${unreadOnly}`),
+  getUnreadCount: () => apiClient.get("/users/me/notifications/unread-count"),
+  markAsRead: (id) => apiClient.patch(`/users/me/notifications/${id}/read`),
+  markAllAsRead: () => apiClient.post("/users/me/notifications/read-all")
+};
+
 export const aiApi = {
   getSubstitutions: (ingredientName, userRegion, allergies) =>
     apiClient.post("/ai/substitutions", { ingredientName, userRegion, allergies }),

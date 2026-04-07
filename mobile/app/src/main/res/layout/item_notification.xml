@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="#4A5362"
+    android:layout_marginBottom="8dp"
+    android:padding="10dp">
+
+    <View
+        android:id="@+id/viewNotifDot"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/bg_avatar_circle"
+        android:backgroundTint="#E5E7EB" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvNotifTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chef!"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvNotifMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:lineSpacingExtra="1dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnNotifMarkRead"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mark as Read"
+                android:textAllCaps="false"
+                android:textColor="#F8CB46"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:background="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/tvNotifTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:textColor="#C8CFDA"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

@@ -73,3 +73,18 @@ interface SynCookApi {
     @POST("syncook/{id}/comments")
     suspend fun addComment(@Path("id") id: Long, @Body payload: SynCookCommentPayload): Response<SynCookComment>
 }
+
+interface NotificationApi {
+
+    @GET("users/me/notifications")
+    suspend fun getNotifications(@Query("unreadOnly") unreadOnly: Boolean = false): Response<List<AppNotification>>
+
+    @GET("users/me/notifications/unread-count")
+    suspend fun getUnreadCount(): Response<UnreadCountResponse>
+
+    @PATCH("users/me/notifications/{id}/read")
+    suspend fun markAsRead(@Path("id") id: Long): Response<AppNotification>
+
+    @POST("users/me/notifications/read-all")
+    suspend fun markAllAsRead(): Response<Map<String, Long>>
+}

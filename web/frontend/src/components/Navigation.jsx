@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   FaBars,
@@ -14,6 +14,7 @@ import {
   FaTimes
 } from "react-icons/fa";
 import { logout } from "../store/authSlice";
+import { notificationApi } from "../api";
 import "./Navigation.css";
 
 const Navigation = () => {
@@ -21,7 +22,27 @@ const Navigation = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [activeNotificationTab, setActiveNotificationTab] = useState("all");
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationLoading, setIsNotificationLoading] = useState(false);
+
+  const panelRef = useRef(null);
+  const bellRef = useRef(null);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.isRead).length,
+    [notifications]
+  );
+
+  const visibleNotifications = useMemo(() => {
+    if (activeNotificationTab === "unread") {
+      return notifications.filter((notification) => !notification.isRead);
+    }
+    return notifications;
+  }, [activeNotificationTab, notifications]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -34,6 +55,63 @@ const Navigation = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
+  const loadNotifications = async () => {
+    if (!isAuthenticated) return;
+    try {
+      setIsNotificationLoading(true);
+      const response = await notificationApi.getMine(false);
+      setNotifications(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      // noop: keep last cached notifications in UI
+    } finally {
+      setIsNotificationLoading(false);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await notificationApi.markAsRead(id);
+      setNotifications((previous) =>
+        previous.map((item) => (item.id === id ? { ...item, isRead: true } : item))
+      );
+    } catch {
+      // noop
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      setNotifications((previous) => previous.map((item) => ({ ...item, isRead: true })));
+    } catch {
+      // noop
+    }
+  };
+
+  const onClickNotification = async (notification) => {
+    if (!notification.isRead) {
+      await markAsRead(notification.id);
+    }
+    if (notification.referenceRecipeId) {
+      navigate("/dashboard");
+      setIsNotificationOpen(false);
+    }
+  };
+
+  const formatRelative = (value) => {
+    if (!value) return "now";
+    const created = new Date(value).getTime();
+    if (Number.isNaN(created)) return "now";
+    const diffMs = Math.max(0, Date.now() - created);
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return "now";
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   useEffect(() => {
     document.documentElement.dataset.authNav = isAuthenticated ? "true" : "false";
     document.documentElement.dataset.sidebarOpen = isSidebarOpen ? "true" : "false";
@@ -43,6 +121,32 @@ const Navigation = () => {
       delete document.documentElement.dataset.sidebarOpen;
     };
   }, [isAuthenticated, isSidebarOpen]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setNotifications([]);
+      setIsNotificationOpen(false);
+      return;
+    }
+
+    loadNotifications();
+    const intervalId = globalThis.setInterval(loadNotifications, 3000);
+    return () => globalThis.clearInterval(intervalId);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!isNotificationOpen) return;
+      const target = event.target;
+      if (panelRef.current?.contains(target) || bellRef.current?.contains(target)) {
+        return;
+      }
+      setIsNotificationOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [isNotificationOpen]);
 
   if (!isAuthenticated) {
     return (
@@ -117,12 +221,15 @@ const Navigation = () => {
 
         <div className="auth-topbar-right">
           <button
+            ref={bellRef}
             type="button"
-            className="notification-btn"
+            className={`notification-btn${isNotificationOpen ? " active" : ""}`}
             aria-label="Notifications"
-            title="Notifications (coming soon)"
+            title="Notifications"
+            onClick={() => setIsNotificationOpen((prev) => !prev)}
           >
             <FaBell />
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>}
           </button>
 
           <div className="user-section topbar-user-section">
@@ -134,6 +241,76 @@ const Navigation = () => {
           </div>
         </div>
       </nav>
+
+      {isNotificationOpen && (
+        <section ref={panelRef} className={`notification-panel${isSidebarOpen ? " sidebar-open" : " sidebar-closed"}`}>
+          <div className="notification-panel-header">
+            <h4>Notification</h4>
+            <button type="button" onClick={markAllAsRead}>Mark all as Read</button>
+          </div>
+
+          <div className="notification-tabs">
+            <button
+              type="button"
+              className={activeNotificationTab === "all" ? "active" : ""}
+              onClick={() => setActiveNotificationTab("all")}
+            >
+              All
+              {unreadCount > 0 && <span>{unreadCount}</span>}
+            </button>
+            <button
+              type="button"
+              className={activeNotificationTab === "unread" ? "active" : ""}
+              onClick={() => setActiveNotificationTab("unread")}
+            >
+              Unread
+            </button>
+          </div>
+
+          <div className="notification-list">
+            {isNotificationLoading && notifications.length === 0 && (
+              <p className="notification-empty">Loading notifications...</p>
+            )}
+
+            {!isNotificationLoading && visibleNotifications.length === 0 && (
+              <p className="notification-empty">No notifications yet.</p>
+            )}
+
+            {visibleNotifications.map((notification) => (
+              <article
+                key={notification.id}
+                className={`notification-card${notification.isRead ? "" : " unread"}`}
+              >
+                <div className="notification-avatar" aria-hidden="true" />
+                <div className="notification-card-content">
+                  <h5>{notification.title || "Chef!"}</h5>
+                  <p>{notification.message}</p>
+                  <div className="notification-card-footer">
+                    <button
+                      type="button"
+                      onClick={() => onClickNotification(notification)}
+                    >
+                      Open
+                    </button>
+                    {!notification.isRead && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                      >
+                        Mark as Read
+                      </button>
+                    )}
+                    <small>{formatRelative(notification.createdAt)}</small>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <aside className={`auth-sidebar${isSidebarOpen ? " open" : " closed"}`}>
         <div className="auth-sidebar-overlay" />

@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/users/**").authenticated()
                 .requestMatchers("/api/syncook/**").authenticated()
+                .requestMatchers("/api/notifications/**").authenticated()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
