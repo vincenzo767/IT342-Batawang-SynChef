@@ -2,10 +2,12 @@ package com.synchef.mobile
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -53,8 +55,8 @@ class RecipeDetailActivity : Activity() {
         val recipeId = intent.getLongExtra(EXTRA_RECIPE_ID, -1L)
         if (recipeId < 0) { finish(); return }
 
-        findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<Button>(R.id.btnFavorite).setOnClickListener { toggleFavorite(recipeId) }
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.btnFavorite).setOnClickListener { toggleFavorite(recipeId) }
         findViewById<Button>(R.id.btnServingsDown).setOnClickListener {
             if (currentServings > 1) {
                 currentServings--
@@ -216,12 +218,10 @@ class RecipeDetailActivity : Activity() {
     }
 
     private fun updateFavoriteButton() {
-        val btn = findViewById<Button>(R.id.btnFavorite)
-        btn.text = if (isFavorited) "Saved" else "Save"
-        btn.setTextColor(
-            if (isFavorited) getColor(R.color.synchef_favorite)
-            else getColor(R.color.synchef_primary)
-        )
+        val btn = findViewById<ImageButton>(R.id.btnFavorite)
+        val tintColor = if (isFavorited) getColor(R.color.synchef_favorite) else getColor(android.R.color.white)
+        btn.setImageResource(android.R.drawable.ic_menu_save)
+        btn.imageTintList = ColorStateList.valueOf(tintColor)
     }
 
     override fun onDestroy() {

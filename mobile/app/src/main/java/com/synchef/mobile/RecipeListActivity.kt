@@ -8,6 +8,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -67,7 +68,7 @@ class RecipeListActivity : Activity() {
         rvRecipes.layoutManager = LinearLayoutManager(this)
         rvRecipes.adapter = adapter
 
-        findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
 
         findViewById<Button>(R.id.btnSearch).setOnClickListener {
             performSearch(etSearch.text.toString().trim())

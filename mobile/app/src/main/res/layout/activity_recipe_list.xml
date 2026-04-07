@@ -9,7 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_button_primary"
+        android:background="@color/synchef_bg_top"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingTop="16dp"
@@ -21,16 +21,15 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_button_secondary"
-                android:text="Back"
-                android:textAllCaps="false"
-                android:textColor="@color/synchef_primary"
-                android:textSize="13sp"
-                android:paddingHorizontal="14dp" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_revert"
+                android:tint="@color/white"
+                android:contentDescription="Back"
+                android:padding="8dp" />
 
             <TextView
                 android:layout_width="0dp"
@@ -43,8 +42,8 @@
                 android:textStyle="bold" />
 
             <View
-                android:layout_width="60dp"
-                android:layout_height="36dp" />
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
 
         </LinearLayout>
 
